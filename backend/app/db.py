@@ -12,6 +12,7 @@ import json
 import re
 import sqlite3
 import threading
+import time
 from datetime import date, datetime
 from pathlib import Path
 
@@ -194,6 +195,7 @@ class _MyConn:
 
     def __init__(self, uri: str):
         import pymysql
+        self._uri = uri
         from urllib.parse import urlparse, unquote, parse_qs
         u = urlparse(uri)
         q = parse_qs(u.query)
@@ -215,23 +217,60 @@ class _MyConn:
         c.close()
         self._conn.commit()
 
-    def _reconnect_if_needed(self):
+    def _hard_reconnect(self):
+        import pymysql
         try:
-            self._conn.ping(reconnect=True)
+            self._conn.close()
         except Exception:
             pass
+        last = None
+        for _ in range(6):
+            try:
+                self.__init__(self._uri)
+                return
+            except Exception as e:  # Aiven restarts / network blips happen
+                last = e
+                time.sleep(2)
+        raise last
+
+    def _is_conn_error(self, e):
+        s = str(e)
+        t = type(e).__name__
+        return t in ("InterfaceError", "OperationalError") and any(
+            k in s for k in ("(0, '')", "2006", "2013", "Lost connection",
+                             "gone away", "Connection refused", "Connection reset"))
 
     def execute(self, sql, args=()):
-        self._reconnect_if_needed()
-        cur = self._conn.cursor()
-        cur.execute(_translate_sql(sql), args)
-        return _MyCursor(cur)
+        last = None
+        for attempt in (1, 2):
+            try:
+                self._conn.ping(reconnect=True)
+                cur = self._conn.cursor()
+                cur.execute(_translate_sql(sql), args)
+                return _MyCursor(cur)
+            except Exception as e:
+                last = e
+                if attempt == 1 and self._is_conn_error(e):
+                    self._hard_reconnect()
+                    continue
+                raise
+        raise last
 
     def executemany(self, sql, seq):
-        self._reconnect_if_needed()
-        cur = self._conn.cursor()
-        cur.executemany(_translate_sql(sql), list(seq))
-        return _MyCursor(cur)
+        last = None
+        for attempt in (1, 2):
+            try:
+                self._conn.ping(reconnect=True)
+                cur = self._conn.cursor()
+                cur.executemany(_translate_sql(sql), list(seq))
+                return _MyCursor(cur)
+            except Exception as e:
+                last = e
+                if attempt == 1 and self._is_conn_error(e):
+                    self._hard_reconnect()
+                    continue
+                raise
+        raise last
 
     def executescript(self, script):
         for stmt in [s.strip() for s in script.split(";") if s.strip()]:

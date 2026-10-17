@@ -803,11 +803,30 @@ def dashboard_data(conn):
             JOIN (SELECT asset_id, MAX(inspected_at) m FROM inspections GROUP BY asset_id) x
               ON x.asset_id=i.asset_id AND x.m=i.inspected_at""").fetchall()
     fleet, watchlist, n_down, deltas = [], [], 0, []
+    # precompute once: thresholds per type, suppression set, per-inspection
+    # corrections — the loop below must stay a handful of queries, not one
+    # query per well (cloud DBs are remote)
+    suppressed = domain.suppressed_inspections(conn)
+    corr_map = {}
+    for c in conn.execute("SELECT inspection_id, field, corrected_value, original_value, "
+                          "author_user_id FROM corrections WHERE active=1"):
+        corr_map.setdefault(c["inspection_id"], []).append(dict(c))
+    thr_by_type = {w["well_type"]: domain.producing_threshold(conn, w["well_type"])
+                   for w in conn.execute("SELECT DISTINCT well_type FROM wells")}
     for r in latest:
-        e = eff(conn, r)
+        # effective values with corrections applied (mirrors tools.eff)
+        e = dict(r)
+        e["spill_suppressed"] = r["inspection_id"] in suppressed
+        for c in corr_map.get(r["inspection_id"], []):
+            try:
+                e[f"original_{c['field']}"] = r[c["field"]]
+                e[c["field"]] = float(c["corrected_value"])
+                e["corrected"] = True
+            except (KeyError, TypeError, ValueError):
+                pass
         delta = ((e["wellhead_temp_c"] or 0) - (e["ambient_temp_c"] or 0)
                  if e["wellhead_temp_c"] is not None and e["ambient_temp_c"] is not None else None)
-        producing = delta is not None and delta >= domain.producing_threshold(conn, r["well_type"])
+        producing = delta is not None and delta >= thr_by_type.get(r["well_type"], 15.0)
         fleet.append({"asset_id": r["asset_id"], "lat": r["lat"], "lon": r["lon"],
                       "producing": producing,
                       "delta": round(delta, 1) if delta is not None else None,
