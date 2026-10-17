@@ -173,21 +173,31 @@ def _translate_sql(sql: str) -> str:
 
 
 class _MyCursor:
-    def __init__(self, cur):
-        self._cur = cur
+    """Holds fully-consumed results: rows are materialised under the
+    connection lock so another request thread can never interleave packets
+    on the same socket (PyMySQL cursors are not thread-safe)."""
+
+    def __init__(self, rows, lastrowid=None):
+        self._rows, self._lastrowid, self._i = rows, lastrowid, 0
 
     def fetchone(self):
-        return self._cur.fetchone()
+        if self._i >= len(self._rows):
+            return None
+        r = self._rows[self._i]
+        self._i += 1
+        return r
 
     def fetchall(self):
-        return self._cur.fetchall()
+        out = self._rows[self._i:]
+        self._i = len(self._rows)
+        return out
 
     def __iter__(self):
-        return iter(self._cur.fetchall())
+        return iter(self._rows)
 
     @property
     def lastrowid(self):
-        return self._cur.lastrowid
+        return self._lastrowid
 
 
 class _MyConn:
@@ -211,6 +221,7 @@ class _MyConn:
         except TypeError:  # older PyMySQL without ssl_mode
             self._conn = pymysql.connect(ssl={"ssl": ssl_mode is not None}, **kwargs)
         self._conn.ping(reconnect=True)
+        self._lock = threading.RLock()
         # SQLite is permissive; match it so GROUP BY / loose typing behave the same
         c = self._conn.cursor()
         c.execute("SET SESSION sql_mode='NO_ENGINE_SUBSTITUTION'")
@@ -241,43 +252,47 @@ class _MyConn:
                              "gone away", "Connection refused", "Connection reset"))
 
     def execute(self, sql, args=()):
-        last = None
-        for attempt in (1, 2):
-            try:
-                self._conn.ping(reconnect=True)
-                cur = self._conn.cursor()
-                cur.execute(_translate_sql(sql), args)
-                return _MyCursor(cur)
-            except Exception as e:
-                last = e
-                if attempt == 1 and self._is_conn_error(e):
-                    self._hard_reconnect()
-                    continue
-                raise
-        raise last
+        with self._lock:
+            last = None
+            for attempt in (1, 2):
+                try:
+                    self._conn.ping(reconnect=True)
+                    cur = self._conn.cursor()
+                    cur.execute(_translate_sql(sql), args)
+                    rows = cur.fetchall() if cur.description else []
+                    return _MyCursor(rows, cur.lastrowid)
+                except Exception as e:
+                    last = e
+                    if attempt == 1 and self._is_conn_error(e):
+                        self._hard_reconnect()
+                        continue
+                    raise
+            raise last
 
     def executemany(self, sql, seq):
-        last = None
-        for attempt in (1, 2):
-            try:
-                self._conn.ping(reconnect=True)
-                cur = self._conn.cursor()
-                cur.executemany(_translate_sql(sql), list(seq))
-                return _MyCursor(cur)
-            except Exception as e:
-                last = e
-                if attempt == 1 and self._is_conn_error(e):
-                    self._hard_reconnect()
-                    continue
-                raise
-        raise last
+        with self._lock:
+            last = None
+            for attempt in (1, 2):
+                try:
+                    self._conn.ping(reconnect=True)
+                    cur = self._conn.cursor()
+                    cur.executemany(_translate_sql(sql), list(seq))
+                    return _MyCursor([], cur.lastrowid)
+                except Exception as e:
+                    last = e
+                    if attempt == 1 and self._is_conn_error(e):
+                        self._hard_reconnect()
+                        continue
+                    raise
+            raise last
+
+    def commit(self):
+        with self._lock:
+            self._conn.commit()
 
     def executescript(self, script):
         for stmt in [s.strip() for s in script.split(";") if s.strip()]:
             self.execute(stmt)
-
-    def commit(self):
-        self._conn.commit()
 
     def rollback(self):
         try:
