@@ -1,0 +1,2983 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Asset Intelligence Copilot — FlytBase Hack Day 2026</title>
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<!-- Leaflet CSS for Interactive GIS Spill Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+:root {
+  --bg-dark: #0a0e17;
+  --bg-panel: #111827;
+  --bg-card: #162032;
+  --bg-card-hover: #1e2c44;
+  --border: #223049;
+  --border-light: #2d3f60;
+  --txt-main: #f1f5f9;
+  --txt-dim: #94a3b8;
+  --txt-muted: #64748b;
+  --primary: #38bdf8;
+  --primary-glow: rgba(56, 189, 248, 0.25);
+  --accent: #6366f1;
+  --success: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.2);
+  --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.2);
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.2);
+  --oil-gold: #eab308;
+  --sidebar-w: 320px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--txt-main);
+  height: 100vh;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+code, pre, .mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Layout */
+#app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+/* Sidebar */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.brand-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.5) 0%, rgba(17, 24, 39, 0) 100%);
+}
+
+.brand-header .title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0284c7, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.brand-header h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #fff;
+}
+
+.brand-header .badge-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 5px;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--primary);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  margin-top: 4px;
+}
+
+/* User Persona Box */
+.persona-box {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.persona-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--txt-muted);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.user-selector-custom {
+  width: 100%;
+  background: var(--bg-card);
+  color: var(--txt-main);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-selector-custom:hover, .user-selector-custom:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.user-role-card {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.4);
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-role-card .role-pill {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  background: #334155;
+  color: #e2e8f0;
+}
+
+/* Sidebar Conversations */
+.sidebar-section-title {
+  padding: 12px 20px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--txt-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.conv-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 12px;
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--txt-dim);
+  font-size: 12.5px;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.conv-item:hover {
+  background: var(--bg-card);
+  color: var(--txt-main);
+}
+
+.conv-item.active {
+  background: var(--bg-card);
+  color: #fff;
+  border-color: var(--border-light);
+  font-weight: 500;
+}
+
+.conv-item .conv-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.conv-item .del-btn {
+  opacity: 0;
+  color: var(--txt-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.conv-item:hover .del-btn {
+  opacity: 1;
+}
+
+.conv-item .del-btn:hover {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.sidebar-actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-new-chat {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15));
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-new-chat:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
+  border-color: var(--primary);
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.btn-audit {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--txt-dim);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-audit:hover {
+  color: var(--txt-main);
+  border-color: var(--border-light);
+  background: var(--bg-card-hover);
+}
+
+/* Main Chat Area */
+#main-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  background: radial-gradient(circle at 50% 0%, #111a2e 0%, var(--bg-dark) 70%);
+}
+
+/* Top Navigation Bar */
+.top-nav {
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.telemetry-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 10px var(--success);
+  position: relative;
+}
+
+.status-dot::after {
+  content: '';
+  position: absolute;
+  top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.telemetry-meta {
+  font-size: 12.5px;
+  color: var(--txt-dim);
+}
+
+.telemetry-meta span.highlight {
+  color: var(--txt-main);
+  font-weight: 600;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scenario-pill-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border-light);
+  color: var(--txt-main);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.scenario-pill-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Chat Messages Scroll Container */
+#chat-viewport {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  scroll-behavior: smooth;
+}
+
+.empty-state-card {
+  max-width: 820px;
+  margin: 30px auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(10px);
+}
+
+.empty-state-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-state-card p {
+  color: var(--txt-dim);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.quick-scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.quick-card {
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.quick-card .qc-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.quick-card .qc-title {
+  font-size: 12.5px;
+  color: var(--txt-main);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Message Rows */
+.chat-row {
+  display: flex;
+  margin-bottom: 24px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-row.user-msg {
+  justify-content: flex-end;
+}
+
+.msg-wrapper {
+  max-width: 900px;
+  width: 100%;
+}
+
+.chat-row.user-msg .msg-wrapper {
+  max-width: 680px;
+  width: auto;
+}
+
+.chat-bubble {
+  border-radius: 14px;
+  padding: 16px 20px;
+  position: relative;
+}
+
+.user-bubble {
+  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+  border: 1px solid #3b82f6;
+  border-bottom-right-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+}
+
+.copilot-bubble {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+.copilot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.copilot-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.copilot-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--txt-main);
+}
+
+.copilot-body p { margin-bottom: 10px; }
+.copilot-body p:last-child { margin-bottom: 0; }
+.copilot-body ul { padding-left: 20px; margin-bottom: 10px; }
+.copilot-body li { margin-bottom: 4px; }
+.copilot-body strong { color: #fff; }
+.copilot-body code {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: #38bdf8;
+}
+
+/* Generative Visual Container */
+.generative-viz-container {
+  margin: 16px 0 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  background: #0f172a;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.generative-viz-container:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.15);
+}
+
+.viz-toolbar {
+  padding: 10px 16px;
+  background: #1e293b;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.viz-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-kind-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.badge-card { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-table { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+.badge-line { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-bar { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-map { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-heatmap { background: rgba(217, 70, 239, 0.2); color: #f0abfc; border: 1px solid rgba(217, 70, 239, 0.3); }
+
+.viz-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.viz-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viz-action-btn {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border);
+  color: var(--txt-dim);
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.viz-action-btn:hover {
+  background: #334155;
+  color: #fff;
+  border-color: var(--border-light);
+}
+
+.viz-body {
+  padding: 16px;
+  position: relative;
+}
+
+/* 1. Status Card */
+.status-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.status-metric-box {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.status-metric-box .metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--txt-muted);
+  letter-spacing: 0.5px;
+}
+
+.status-metric-box .metric-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delta-bar-container {
+  margin-top: 8px;
+  height: 6px;
+  background: #1e293b;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.delta-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Status Badges */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.b-producing { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.b-stopped { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+.b-stale { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+.b-breach { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+.b-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+.b-met { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+/* 2. Modern Table */
+.table-filter-bar {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-search-input {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border);
+  color: var(--txt-main);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 200px;
+}
+
+.table-search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.modern-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+table.copilot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+table.copilot-table th {
+  background: #1e293b;
+  color: var(--txt-dim);
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+table.copilot-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(34, 48, 73, 0.6);
+  color: var(--txt-main);
+}
+
+table.copilot-table tr:last-child td {
+  border-bottom: none;
+}
+
+table.copilot-table tr:hover td {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+/* 3 & 4. Charts SVG Container */
+.chart-svg-container {
+  width: 100%;
+  position: relative;
+}
+
+.chart-tooltip {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #fff;
+  pointer-events: none;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  display: none;
+  z-index: 100;
+}
+
+/* 5. GIS Map */
+.gis-map-viewport {
+  width: 100%;
+  height: 380px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 6. Heatmap */
+.heatmap-grid-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.heatmap-cell {
+  padding: 10px 8px;
+  text-align: center;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12.5px;
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 2;
+  position: relative;
+}
+
+/* Evidence Chips */
+.evidence-section {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.evidence-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--txt-muted);
+  letter-spacing: 0.7px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.evidence-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ev-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  cursor: pointer;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--txt-dim);
+  transition: all 0.2s ease;
+}
+
+.ev-chip:hover {
+  transform: translateY(-1px);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.ev-chip.chip-insp { border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+.ev-chip.chip-mnt { border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
+.ev-chip.chip-doc { border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; }
+.ev-chip.chip-note { border-color: rgba(245, 158, 11, 0.4); color: #fde047; }
+.ev-chip.chip-evt { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+
+/* Conflict / Confirmation Box */
+.conflict-box {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.conflict-box .c-msg {
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.conflict-box .c-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.conflict-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.conflict-btn.btn-confirm {
+  background: var(--warning);
+  color: #000;
+  border: none;
+}
+
+.conflict-btn.btn-dismiss {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--txt-dim);
+}
+
+.conflict-btn:hover { opacity: 0.9; }
+
+/* Input Bar */
+#chat-input-area {
+  padding: 14px 28px 20px;
+  background: rgba(17, 24, 39, 0.95);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.suggestions-carousel {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.suggestions-carousel::-webkit-scrollbar { display: none; }
+
+.sugg-chip {
+  white-space: nowrap;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--txt-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.sugg-chip:hover {
+  background: var(--bg-card-hover);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.input-box-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 6px 12px 6px 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: all 0.2s;
+}
+
+.input-box-row:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+#chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  max-height: 120px;
+  min-height: 24px;
+  outline: none;
+  line-height: 1.5;
+  padding: 6px 0;
+}
+
+#chat-input::placeholder {
+  color: var(--txt-muted);
+}
+
+.send-btn {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  border: none;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Modals & Drawers */
+.drawer-backdrop {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drawer-backdrop.open {
+  display: block;
+  opacity: 1;
+}
+
+.side-drawer {
+  position: fixed;
+  top: 0; right: -550px; width: 520px; height: 100vh;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+  z-index: 1001;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.side-drawer.open {
+  right: 0;
+}
+
+.drawer-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.drawer-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--txt-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.drawer-close-btn:hover { color: #fff; }
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Modal Dialog */
+.modal-dialog-wrap {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-dialog-wrap.open {
+  display: flex;
+}
+
+.modal-content-card {
+  width: 90%;
+  max-width: 860px;
+  max-height: 85vh;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: #0f172a;
+}
+
+.m-tab-btn {
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--txt-dim);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.m-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.modal-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #26334d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #374b70; }
+</style>
+</head>
+<body>
+
+<div id="app-container">
+  <!-- Left Sidebar -->
+  <aside id="sidebar">
+    <div class="brand-header">
+      <div class="title-row">
+        <div class="brand-icon">🛢️</div>
+        <div>
+          <h1>Asset Intelligence</h1>
+          <span class="badge-tag">FlytBase Hack Day 2026</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Persona -->
+    <div class="persona-box">
+      <div class="persona-label">
+        <span>Current Operator</span>
+        <span class="mono" id="user-id-badge">U-201</span>
+      </div>
+      <select id="user-selector" class="user-selector-custom"></select>
+      <div class="user-role-card">
+        <span class="role-pill" id="user-role-pill">Supervisor</span>
+        <span id="user-team-label">Northeast Production</span>
+      </div>
+    </div>
+
+    <!-- Conversations Section -->
+    <div class="sidebar-section-title">
+      <span>Private Conversations</span>
+    </div>
+    <div class="conv-list" id="conv-list-container"></div>
+
+    <!-- Sidebar Bottom Actions -->
+    <div class="sidebar-actions">
+      <button class="btn-new-chat" id="btn-new-chat">
+        <span>＋</span> New Conversation
+      </button>
+      <button class="btn-audit" id="btn-open-memory-audit">
+        <span>🧠</span> System Memory & Auditing
+      </button>
+      <button class="btn-audit" id="btn-open-scenario-drawer">
+        <span>⚡</span> 18 Evaluation Scenarios
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Chat Dashboard -->
+  <main id="main-chat">
+    <!-- Top Nav -->
+    <nav class="top-nav">
+      <div class="telemetry-status">
+        <div class="status-dot"></div>
+        <div class="telemetry-meta">
+          <span id="db-stats">Connecting to asset telemetry database…</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="scenario-pill-btn" id="btn-quick-scenarios">
+          <span>🎯</span> Quick Scenarios
+        </button>
+        <button class="scenario-pill-btn" id="btn-ingest-trigger">
+          <span>🔄</span> Ingest Data
+        </button>
+      </div>
+    </nav>
+
+    <!-- Chat Viewport -->
+    <div id="chat-viewport">
+      <!-- Empty state injected on first load if no messages -->
+    </div>
+
+    <!-- Input Bar -->
+    <div id="chat-input-area">
+      <!-- Quick Suggestions Carousel -->
+      <div class="suggestions-carousel" id="suggestions-carousel"></div>
+      
+      <!-- Chat Input Row -->
+      <div class="input-box-row">
+        <textarea id="chat-input" rows="1" placeholder="Ask about any well, area, spill, downtime, compliance rule or repair cost…"></textarea>
+        <button class="send-btn" id="btn-send" title="Send question">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Evidence Inspector Drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<div class="side-drawer" id="side-drawer">
+  <div class="drawer-header">
+    <h3 id="drawer-title">Evidence Inspector</h3>
+    <button class="drawer-close-btn" id="drawer-close">&times;</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <!-- Populated via API lookup -->
+  </div>
+</div>
+
+<!-- System Memory & Auditing Modal -->
+<div class="modal-dialog-wrap" id="memory-modal">
+  <div class="modal-content-card">
+    <div class="drawer-header">
+      <div>
+        <h3>Copilot Memory & Feedback Registry</h3>
+        <p style="font-size:12px; color:var(--txt-muted); margin-top:2px;">Audit trail of shared well context, per-user private memory, and data corrections</p>
+      </div>
+      <button class="drawer-close-btn" id="memory-modal-close">&times;</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="m-tab-btn active" data-tab="tab-corrections">Data Corrections</button>
+      <button class="m-tab-btn" data-tab="tab-rules">Well-Type Rules</button>
+      <button class="m-tab-btn" data-tab="tab-shared">Shared Notes</button>
+      <button class="m-tab-btn" data-tab="tab-claims">Claims & Conflicts</button>
+    </div>
+    <div class="modal-tab-content" id="memory-modal-content">
+      <!-- Dynamic Memory Content -->
+    </div>
+  </div>
+</div>
+
+<!-- 18 Evaluation Scenarios Modal -->
+<div class="modal-dialog-wrap" id="scenarios-modal">
+  <div class="modal-content-card">
+    <div class="drawer-header">
+      <div>
+        <h3>Hackathon Evaluation Scenarios (Q1 — Q18)</h3>
+        <p style="font-size:12px; color:var(--txt-muted); margin-top:2px;">Select any official query to execute end-to-end with ground truth validation</p>
+      </div>
+      <button class="drawer-close-btn" id="scenarios-modal-close">&times;</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="m-tab-btn active" data-scen-tab="scen-a1">Part A1: Data Queries (Q1–Q10)</button>
+      <button class="m-tab-btn" data-scen-tab="scen-a2">Part A2: Memory & Feedback (Q11–Q14)</button>
+      <button class="m-tab-btn" data-scen-tab="scen-b">Part B: Multi-User & Conflicts (Q15–Q18)</button>
+    </div>
+    <div class="modal-tab-content" id="scenarios-modal-content">
+      <!-- Injected list of scenarios -->
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS for GIS Spill Map -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+"use strict";
+
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+const state = {
+  user: "U-201",
+  users: [],
+  cid: null,
+  convs: [],
+  activeVisualData: {} // id -> payload for dynamic view toggling
+};
+
+/* Official Hackathon Scenarios */
+const SCENARIOS = [
+  { id: "Q1", cat: "a1", user: "U-201", title: "Is WELL-0001 producing oil right now?", query: "Is WELL-0001 producing oil right now? When was it last inspected, and by whom?", expected: "Card visual, Wellhead 3.2°C warmer (below T200 15°C limit), Ryan Brooks drone on 15 Oct 2026, planned shut-in note CTX-0001-003, recorded status active is STALE." },
+  { id: "Q2", cat: "a1", user: "U-201", title: "Northeast Block 8 wells not producing", query: "Which wells in Northeast Block 8 are not producing oil right now, and why? Show them in a table.", expected: "Table visual with 4 wells (WELL-0164, WELL-0170, WELL-0172, WELL-0175)." },
+  { id: "Q3", cat: "a1", user: "U-201", title: "13-week temperature line chart (WELL-0001)", query: "Show a line chart of WELL-0001's wellhead temperature against air temperature for the last 13 weeks, and mark when it was not producing oil.", expected: "Line chart with 13 readings. Non-producing marked on 8 Oct and 15 Oct." },
+  { id: "Q4", cat: "a1", user: "U-201", title: "4-year oil spill history for WELL-0001", query: "How many oil spills has WELL-0001 had in the last 4 years, and how much oil in total? List them in a table.", expected: "Table visual with 6 spills, 15.1 barrels (7th detection was rainwater CTX-0001-001)." },
+  { id: "Q5", cat: "a1", user: "U-201", title: "WELL-0001 downtime days in 2025", query: "How many days was WELL-0001 down in 2025?", expected: "21 days from 3 weekly inspections (24 Jul prime mover tripped MNT-0001-021; 16 & 23 Oct stuffing box leak MNT-0001-023)." },
+  { id: "Q6", cat: "a1", user: "U-201", title: "Top 3 downtime wells in Northeast Block 7", query: "Which 3 wells in Northeast Block 7 had the most downtime in the last 4 months? Show a bar chart.", expected: "Bar chart: WELL-0121 (49 days), WELL-0138 (42 days), WELL-0107 (42 days)." },
+  { id: "Q7", cat: "a1", user: "U-201", title: "Northeast Block 8 spill GIS map (last 90 days)", query: "Show on a map every well in Northeast Block 8 with a real spill in the last 90 days.", expected: "Map with 4 pins: WELL-0151 (4.5 bbl), WELL-0165 (1.2 bbl), WELL-0175 (3.9 bbl), WELL-0186 (0.6 bbl)." },
+  { id: "Q8", cat: "a1", user: "U-201", title: "2026 spill heatmap by Area × Month", query: "Show a heatmap of 2026 spills by geographic area and month.", expected: "Heatmap grid (Jan-Oct). Southwest 23: 35, Southwest 24: 43, Northeast 7: 37, Northeast 8: 26." },
+  { id: "Q9", cat: "a1", user: "U-201", title: "Rule breaches for WELL-0001 (last 12 months)", query: "Which rules has WELL-0001 broken in the last 12 months, and what is still open?", expected: "Four breaches from 11 Jun 2026 spill: SR-01, SR-02, SR-03, RC-04, $5,000 fine still open." },
+  { id: "Q10", cat: "a1", user: "U-201", title: "Southwest Block 24 late spill containments", query: "In Southwest Block 24, which spills in the last 90 days were not contained within the SOP time limit?", expected: "2 spills: WELL-0082 (7.1h) and WELL-0100 (8.1h)." },
+  
+  /* Part A2 */
+  { id: "Q11", cat: "a2", user: "U-201", title: "Repair cost for the 3 discussed wells", query: "For the three wells we discussed yesterday, what have repairs cost this year?", expected: "Private memory resolves to WELL-0121 ($25,794), WELL-0138 ($46,942), WELL-0107 ($5,176)." },
+  { id: "Q12", cat: "a2", user: "U-201", title: "Correct wrong raw reading for WELL-0164", query: "The 15 Oct reading for WELL-0164 is wrong. The handheld thermal gun used in that inspection was faulty; the field crew re-measured the wellhead at 41.0 °C.", expected: "Correction recorded against INS-0164-0205. Original 24.0°C kept. Notes conflict with 'Pump jack not moving'." },
+  { id: "Q13", cat: "a2", user: "U-201", title: "Correct AI spill estimate at WELL-0151", query: "The AI estimated the 24 Sep spill at WELL-0151 as 4.5 bbl. The field crew measured 5.4 bbl.", expected: "Volume updated to 5.4 bbl. Flags SR-01 24h notice breach and SR-03 clean-up verification due 23 Nov 2026." },
+  { id: "Q14", cat: "a2", user: "U-201", title: "Custom rule for all T350 wells", query: "Note for all T350 wells: our team now wants a pump jack root-cause analysis after 2 repairs, not 3.", expected: "User rule stored. Re-querying RCA in Northeast Block 7 now includes WELL-0120." },
+
+  /* Part B */
+  { id: "Q15", cat: "b", user: "U-202", title: "Jessica Reed sees Michael's correction", query: "Is WELL-0164 producing oil right now?", expected: "Answers YES based on Michael Turner's 41.0°C correction, also notes Tyler Hughes's conflicting remark." },
+  { id: "Q16", cat: "b", user: "U-102", title: "Shared workover announcement for WELL-0007", query: "FYI for everyone: WELL-0007 will be shut in from 17 Oct for a 10-day planned workover.", expected: "Shared note saved for all users." },
+  { id: "Q17", cat: "b", user: "U-204", title: "Tyler Hughes claim conflicts with inspection", query: "WELL-0175 is running fine.", expected: "Copilot highlights conflict: 15 Oct inspection shows wellhead only 0.4°C above air. Marks unconfirmed." },
+  { id: "Q18", cat: "b", user: "U-201", title: "Disagreement on 20 Aug spill at WELL-0101", query: "Was the 20 Aug spill at WELL-0101 real oil?", expected: "Answers YES (spill detection stands), cites Ryan Brooks water note vs Chris Dalton HSE crude test." }
+];
+
+/* ---------- Markdown Parser ---------- */
+function esc(s){
+  if(s===null||s===undefined)return"";
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function parseMarkdown(t){
+  if(!t)return"";
+  const lines = esc(t).split(/\n/);
+  let out = [], inList = false;
+  const fmt = x => x
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/(\b(?:INS|MNT|CTX|REG)-\d+-\d+\b)/g, `<span class="mono" style="color:var(--primary)">$1</span>`);
+
+  for(let ln of lines){
+    if(/^- /.test(ln)){
+      if(!inList){ out.push("<ul>"); inList = true; }
+      out.push("<li>" + fmt(ln.slice(2)) + "</li>");
+      continue;
+    }
+    if(inList){ out.push("</ul>"); inList = false; }
+    if(!ln.trim()){ out.push(""); continue; }
+    out.push("<p>" + fmt(ln) + "</p>");
+  }
+  if(inList) out.push("</ul>");
+  return out.join("");
+}
+
+/* ---------- Evidence Chips with Click Inspector ---------- */
+function renderEvidence(env){
+  const ev = (env.evidence || []);
+  if(!ev.length) return "";
+  const cls = {
+    inspection: "chip-insp",
+    note: "chip-note",
+    maintenance: "chip-mnt",
+    report: "chip-mnt",
+    event: "chip-evt",
+    doc: "chip-doc",
+    correction: "chip-note",
+    claim: "chip-note"
+  };
+  const icons = {
+    inspection: "🔍",
+    note: "📝",
+    maintenance: "🔧",
+    report: "📄",
+    event: "⚖️",
+    doc: "📚",
+    correction: "✏️",
+    claim: "⚠️"
+  };
+  
+  return `<div class="evidence-section">
+    <div class="evidence-header">
+      <span>Grounded Evidence Citations (${ev.length})</span>
+      <span style="font-size:10px;color:var(--txt-muted);font-weight:400">· Click any chip to inspect raw record</span>
+    </div>
+    <div class="evidence-chips-wrap">` +
+    ev.map(e => `
+      <span class="ev-chip ${cls[e.type]||""}" onclick="inspectEvidence('${esc(e.id)}','${esc(e.type)}')">
+        <span>${icons[e.type]||"📌"}</span>
+        <b>${esc(e.id)}</b>
+        <span style="color:var(--txt-muted)">· ${esc((e.label||"").slice(0, 48))}</span>
+      </span>
+    `).join("") +
+    `</div></div>`;
+}
+
+/* ---------- Generative Visuals: Card ---------- */
+function renderStatusCard(v, vizId){
+  const p = v.payload || {};
+  const isUp = p.producing === true;
+  const delta = p.delta_c != null ? p.delta_c : null;
+  const thr = p.threshold_c != null ? p.threshold_c : 15.0;
+  const pct = Math.min(100, Math.max(0, (delta / (thr * 1.5)) * 100));
+
+  return `
+    <div class="status-card-grid">
+      <div class="status-metric-box">
+        <div class="metric-label">Operational State</div>
+        <div class="metric-val">
+          <span class="badge-pill ${isUp ? 'b-producing' : 'b-stopped'}">
+            <span style="font-size:8px">●</span> ${isUp ? 'PRODUCING OIL' : 'STOPPED / SHUT-IN'}
+          </span>
+        </div>
+        <div style="font-size:11.5px;color:var(--txt-dim);margin-top:4px;">
+          ${p.asset_id} (${p.well_type || 'Well'})
+        </div>
+      </div>
+
+      <div class="status-metric-box">
+        <div class="metric-label">Thermal Delta (Wellhead − Air)</div>
+        <div class="metric-val">
+          <span style="color:${delta >= thr ? '#34d399' : '#f87171'}">${delta != null ? delta + ' °C' : '—'}</span>
+          <span style="font-size:12px;color:var(--txt-muted);font-weight:400">/ req. ≥ ${thr} °C</span>
+        </div>
+        <div class="delta-bar-container">
+          <div class="delta-bar-fill" style="width:${pct}%;background:${delta >= thr ? 'linear-gradient(90deg,#059669,#10b981)' : 'linear-gradient(90deg,#dc2626,#f87171)'}"></div>
+        </div>
+      </div>
+
+      <div class="status-metric-box">
+        <div class="metric-label">System of Record</div>
+        <div class="metric-val">
+          <span class="badge-pill ${p.status_stale ? 'b-stale' : 'b-met'}">
+            ${p.recorded_status || 'active'} ${p.status_stale ? '· STALE' : ''}
+          </span>
+        </div>
+        <div style="font-size:11px;color:var(--txt-muted);margin-top:4px;">
+          ${p.status_stale ? 'Inspection overrides system record' : 'Synchronized with field'}
+        </div>
+      </div>
+
+      <div class="status-metric-box">
+        <div class="metric-label">Latest Field Inspection</div>
+        <div class="metric-val" style="font-size:13.5px;">
+          ${p.inspector || 'Ryan Brooks'}
+        </div>
+        <div style="font-size:11px;color:var(--txt-dim);margin-top:2px;">
+          ${p.method ? p.method.toUpperCase() + ' · ' : ''}${p.last_inspected_at ? p.last_inspected_at.slice(0, 10) : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Generative Visuals: Table ---------- */
+function renderTable(v, vizId){
+  const cols = v.columns || [];
+  const rows = v.rows || [];
+  
+  return `
+    <div class="table-filter-bar">
+      <input type="text" class="table-search-input" placeholder="Filter rows..." onkeyup="filterTable(this, '${vizId}')"/>
+      <div style="font-size:11.5px;color:var(--txt-muted)">${rows.length} rows</div>
+    </div>
+    <div class="modern-table-wrap">
+      <table class="copilot-table" id="tbl-${vizId}">
+        <thead>
+          <tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              ${r.map(cell => `<td>${formatTableCell(cell)}</td>`).join("")}
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function formatTableCell(c){
+  if(c === null || c === undefined) return `<span style="color:var(--txt-muted)">—</span>`;
+  const s = String(c).trim();
+  if(/^(breach|violation|open|down|NO)$/i.test(s)){
+    return `<span class="badge-pill b-breach">${esc(s)}</span>`;
+  }
+  if(/^(pending|stale|moderate)$/i.test(s)){
+    return `<span class="badge-pill b-pending">${esc(s)}</span>`;
+  }
+  if(/^(met|closed|active|YES|drone)$/i.test(s)){
+    return `<span class="badge-pill b-met">${esc(s)}</span>`;
+  }
+  if(/^WELL-\d+$/i.test(s)){
+    return `<b style="color:#60a5fa">${esc(s)}</b>`;
+  }
+  return esc(s);
+}
+
+/* ---------- Generative Visuals: Line Chart ---------- */
+function renderLineChart(v, vizId){
+  const pts = v.points || [];
+  if(!pts.length) return `<div style="padding:16px;color:var(--txt-muted)">No time-series telemetry available.</div>`;
+
+  const W = 820, H = 280, P = 45;
+  const xs = pts.map(p => p[v.x_key]);
+  const allVals = pts.flatMap(p => [p.wellhead, p.ambient]);
+  const yMin = Math.floor(Math.min(...allVals) - 4);
+  const yMax = Math.ceil(Math.max(...allVals) + 4);
+
+  const X = i => P + (W - 2 * P) * (i / Math.max(pts.length - 1, 1));
+  const Y = val => H - P - (H - 2 * P) * ((val - yMin) / (yMax - yMin));
+
+  let grid = "";
+  for(let i = 0; i <= 4; i++){
+    const yVal = yMin + (yMax - yMin) * (i / 4);
+    const yPos = Y(yVal);
+    grid += `<line x1="${P}" x2="${W - P}" y1="${yPos}" y2="${yPos}" stroke="#1e293b" stroke-dasharray="3 3"/>
+             <text x="${P - 8}" y="${yPos + 4}" fill="#64748b" font-size="10" text-anchor="end">${yVal.toFixed(0)}°C</text>`;
+  }
+
+  // X axis labels
+  const step = Math.max(1, Math.ceil(pts.length / 7));
+  pts.forEach((p, i) => {
+    if(i % step === 0 || i === pts.length - 1){
+      grid += `<text x="${X(i)}" y="${H - P + 16}" fill="#64748b" font-size="10" text-anchor="middle">${p[v.x_key].slice(5)}</text>`;
+    }
+  });
+
+  const pathW = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(i)},${Y(p.wellhead)}`).join(" ");
+  const pathA = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(i)},${Y(p.ambient)}`).join(" ");
+  const areaW = `${pathW} L${X(pts.length - 1)},${H - P} L${X(0)},${H - P} Z`;
+
+  const downSet = new Set(v.not_producing || []);
+  let pointsHtml = "";
+  pts.forEach((p, i) => {
+    const isDown = downSet.has(p[v.x_key]);
+    if(isDown){
+      pointsHtml += `
+        <circle cx="${X(i)}" cy="${Y(p.wellhead)}" r="8" fill="rgba(239, 68, 68, 0.25)"/>
+        <circle cx="${X(i)}" cy="${Y(p.wellhead)}" r="4.5" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+      `;
+    } else {
+      pointsHtml += `<circle cx="${X(i)}" cy="${Y(p.wellhead)}" r="3" fill="#f59e0b"/>`;
+    }
+    pointsHtml += `<circle cx="${X(i)}" cy="${Y(p.ambient)}" r="2.5" fill="#38bdf8"/>`;
+  });
+
+  const legend = `
+    <g transform="translate(${P}, 16)">
+      <circle cx="4" cy="0" r="4" fill="#f59e0b"/>
+      <text x="12" y="3" fill="#f59e0b" font-size="11" font-weight="600">Wellhead Temp (°C)</text>
+      <line x1="140" y1="0" x2="160" y2="0" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="166" y="3" fill="#38bdf8" font-size="11" font-weight="600">Ambient Air Temp (°C)</text>
+      <circle cx="310" cy="0" r="5" fill="#ef4444"/>
+      <text x="320" y="3" fill="#f87171" font-size="11" font-weight="600">Not Producing (Delta &lt; ${v.threshold_c || 15}°C)</text>
+    </g>
+  `;
+
+  return `
+    <div class="chart-svg-container">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">
+        <defs>
+          <linearGradient id="grad-w-${vizId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+        ${grid}
+        <path d="${areaW}" fill="url(#grad-w-${vizId})"/>
+        <path d="${pathW}" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+        <path d="${pathA}" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 3"/>
+        ${pointsHtml}
+        ${legend}
+      </svg>
+    </div>
+  `;
+}
+
+/* ---------- Generative Visuals: Bar Chart ---------- */
+function renderBarChart(v, vizId){
+  const pts = v.points || [];
+  if(!pts.length) return `<div style="padding:16px;color:var(--txt-muted)">No bar chart data.</div>`;
+
+  const W = 820, H = 260, P = 45;
+  const maxVal = Math.max(...pts.map(p => p[v.y_key])) * 1.15;
+  const barW = Math.min(80, ((W - 2 * P) / pts.length) * 0.55);
+
+  let grid = "";
+  for(let i = 0; i <= 4; i++){
+    const yVal = maxVal * (i / 4);
+    const yPos = H - P - (H - 2 * P) * (i / 4);
+    grid += `<line x1="${P}" x2="${W - P}" y1="${yPos}" y2="${yPos}" stroke="#1e293b"/>
+             <text x="${P - 8}" y="${yPos + 4}" fill="#64748b" font-size="10" text-anchor="end">${yVal.toFixed(0)} d</text>`;
+  }
+
+  let bars = "";
+  const rankBadges = ["🥇 #1", "🥈 #2", "🥉 #3"];
+  pts.forEach((p, i) => {
+    const xMid = P + (W - 2 * P) * ((i + 0.5) / pts.length);
+    const bHeight = (H - 2 * P) * (p[v.y_key] / maxVal);
+    const yTop = H - P - bHeight;
+
+    bars += `
+      <rect x="${xMid - barW / 2}" y="${yTop}" width="${barW}" height="${bHeight}" rx="6" fill="url(#barGrad-${vizId})" stroke="#60a5fa" stroke-width="1"/>
+      <text x="${xMid}" y="${yTop - 8}" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">${p[v.y_key]} d</text>
+      <text x="${xMid}" y="${H - P + 16}" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">${p[v.x_key]}</text>
+      ${i < 3 ? `<text x="${xMid}" y="${H - P + 30}" fill="#fbbf24" font-size="10" text-anchor="middle">${rankBadges[i]}</text>` : ''}
+    `;
+  });
+
+  return `
+    <div class="chart-svg-container">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">
+        <defs>
+          <linearGradient id="barGrad-${vizId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#38bdf8"/>
+            <stop offset="100%" stop-color="#1e3a8a"/>
+          </linearGradient>
+        </defs>
+        ${grid}
+        ${bars}
+      </svg>
+    </div>
+  `;
+}
+
+/* ---------- Generative Visuals: GIS Map ---------- */
+function renderMap(v, vizId){
+  const pts = v.points || [];
+  if(!pts.length) return `<div style="padding:16px;color:var(--txt-muted)">No spill coordinates in query range.</div>`;
+
+  setTimeout(() => initLeafletMap(v, vizId), 50);
+
+  return `
+    <div class="gis-map-viewport" id="map-wrap-${vizId}">
+      <!-- Leaflet map mounted here -->
+    </div>
+  `;
+}
+
+function initLeafletMap(v, vizId){
+  const container = document.getElementById(`map-wrap-${vizId}`);
+  if(!container) return;
+
+  const pts = v.points || [];
+  if(typeof L === "undefined"){
+    // Fallback to SVG map if CDN unreachable
+    container.innerHTML = renderSvgMapFallback(pts);
+    return;
+  }
+
+  const lats = pts.map(p => p.lat);
+  const lons = pts.map(p => p.lon);
+  const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+  const centerLon = lons.reduce((a, b) => a + b, 0) / lats.length;
+
+  try {
+    const map = L.map(container, { attributionControl: false, zoomControl: true }).setView([centerLat, centerLon], 12);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16
+    }).addTo(map);
+
+    pts.forEach(p => {
+      const radius = 8 + (p.volume_bbl / 5) * 10;
+      const circle = L.circleMarker([p.lat, p.lon], {
+        radius: radius,
+        fillColor: '#eab308',
+        color: '#f59e0b',
+        weight: 2,
+        opacity: 0.9,
+        fillOpacity: 0.4
+      }).addTo(map);
+
+      circle.bindPopup(`
+        <div style="font-family:Inter,sans-serif;color:#0f172a;min-width:140px;">
+          <b style="font-size:13px;color:#1e3a8a;">${p.asset_id}</b>
+          <div style="font-size:11.5px;margin:3px 0;">Spill Date: <b>${p.date}</b></div>
+          <div style="font-size:12px;color:#b45309;font-weight:700;">Volume: ${p.volume_bbl} barrels</div>
+          <div style="font-size:10px;color:#64748b;margin-top:4px;">Lat: ${p.lat.toFixed(4)}, Lon: ${p.lon.toFixed(4)}</div>
+        </div>
+      `);
+    });
+
+    const bounds = L.latLngBounds(pts.map(p => [p.lat, p.lon]));
+    map.fitBounds(bounds, { padding: [40, 40] });
+  } catch(e) {
+    console.warn("Leaflet error, using SVG fallback:", e);
+    container.innerHTML = renderSvgMapFallback(pts);
+  }
+}
+
+function renderSvgMapFallback(pts){
+  const W = 800, H = 340, P = 40;
+  const lats = pts.map(p => p.lat);
+  const lons = pts.map(p => p.lon);
+  const la0 = Math.min(...lats) - 0.015, la1 = Math.max(...lats) + 0.015;
+  const lo0 = Math.min(...lons) - 0.015, lo1 = Math.max(...lons) + 0.015;
+  const X = lo => P + (W - 2 * P) * ((lo - lo0) / (lo1 - lo0));
+  const Y = la => H - P - (H - 2 * P) * ((la - la0) / (la1 - la0));
+  const maxV = Math.max(...pts.map(p => p.volume_bbl));
+
+  let pins = "";
+  pts.forEach(p => {
+    const r = 8 + 14 * (p.volume_bbl / maxV);
+    pins += `
+      <circle cx="${X(p.lon)}" cy="${Y(p.lat)}" r="${r}" fill="rgba(234, 179, 8, 0.25)"/>
+      <circle cx="${X(p.lon)}" cy="${Y(p.lat)}" r="5" fill="#eab308" stroke="#fff" stroke-width="1.5"/>
+      <text x="${X(p.lon) + r + 5}" y="${Y(p.lat) - 2}" fill="#fff" font-size="11" font-weight="700">${p.asset_id}</text>
+      <text x="${X(p.lon) + r + 5}" y="${Y(p.lat) + 12}" fill="#94a3b8" font-size="10">${p.date} · ${p.volume_bbl} bbl</text>
+    `;
+  });
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%;background:#090d16;display:block;border-radius:8px;">
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#0b1120"/>
+      ${pins}
+    </svg>
+  `;
+}
+
+/* ---------- Generative Visuals: Heatmap ---------- */
+function renderHeatmap(v, vizId){
+  const rows = v.rows || [];
+  const cols = v.columns || [];
+  if(!rows.length) return `<div style="padding:16px;color:var(--txt-muted)">No 2D density data available.</div>`;
+
+  const cellVals = rows.flatMap(r => r.slice(1).map(Number));
+  const max = Math.max(1, ...cellVals);
+
+  const getHeatColor = val => {
+    if(!val) return "rgba(30, 41, 59, 0.4)";
+    const ratio = val / max;
+    if(ratio < 0.25) return "rgba(59, 130, 246, 0.35)";
+    if(ratio < 0.5) return "rgba(16, 185, 129, 0.45)";
+    if(ratio < 0.75) return "rgba(245, 158, 11, 0.65)";
+    return "rgba(239, 68, 68, 0.85)";
+  };
+
+  return `
+    <div class="modern-table-wrap">
+      <table class="heatmap-grid-table">
+        <thead>
+          <tr>
+            <th style="padding:8px 12px;text-align:left;color:var(--txt-muted)">Area</th>
+            ${cols.map(c => `<th style="padding:8px 4px;text-align:center;color:var(--txt-muted);font-size:11px;">${c.slice(5)}</th>`).join("")}
+            <th style="padding:8px 10px;text-align:center;color:var(--txt-main);font-weight:700;">Σ Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td style="padding:8px 12px;font-weight:600;white-space:nowrap;color:#fff;">${esc(r[0])}</td>
+              ${r.slice(1, -1).map((val, idx) => `
+                <td class="heatmap-cell" style="background:${getHeatColor(val)};color:${val > 3 ? '#fff' : '#cbd5e1'};"
+                    title="${r[0]} · ${cols[idx]} · ${val} spills">
+                  ${val || '·'}
+                </td>
+              `).join("")}
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#38bdf8;">
+                ${r[r.length - 1]}
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ---------- Master Generative Visual Assembler ---------- */
+let vizCounter = 0;
+function renderVisualContainer(v){
+  if(!v || !v.kind) return "";
+  vizCounter++;
+  const vizId = "viz-" + vizCounter;
+  state.activeVisualData[vizId] = v;
+
+  let bodyHtml = "";
+  if(v.kind === "card") bodyHtml = renderStatusCard(v, vizId);
+  else if(v.kind === "table") bodyHtml = renderTable(v, vizId);
+  else if(v.kind === "line") bodyHtml = renderLineChart(v, vizId);
+  else if(v.kind === "bar") bodyHtml = renderBarChart(v, vizId);
+  else if(v.kind === "map") bodyHtml = renderMap(v, vizId);
+  else if(v.kind === "heatmap") bodyHtml = renderHeatmap(v, vizId);
+
+  return `
+    <div class="generative-viz-container" id="${vizId}">
+      <div class="viz-toolbar">
+        <div class="viz-title-group">
+          <span class="viz-kind-badge badge-${v.kind}">${v.kind}</span>
+          <span class="viz-title">${esc(v.title || (v.kind.toUpperCase() + ' VISUALIZATION'))}</span>
+        </div>
+        <div class="viz-actions">
+          ${v.kind === 'table' ? `<button class="viz-action-btn" onclick="exportTableCsv('${vizId}')">📥 Export CSV</button>` : ''}
+          <button class="viz-action-btn" onclick="toggleRawPayload('${vizId}')">{ } Raw Data</button>
+        </div>
+      </div>
+      <div class="viz-body" id="body-${vizId}">
+        ${bodyHtml}
+      </div>
+      <div id="raw-${vizId}" style="display:none;padding:14px;background:#060a12;border-top:1px solid var(--border);font-family:monospace;font-size:11.5px;max-height:220px;overflow-y:auto;color:#7dd3fc;">
+        <pre>${esc(JSON.stringify(v, null, 2))}</pre>
+      </div>
+    </div>
+  `;
+}
+
+function toggleRawPayload(id){
+  const el = document.getElementById("raw-" + id);
+  if(el) el.style.display = (el.style.display === "none") ? "block" : "none";
+}
+
+function filterTable(input, vizId){
+  const filter = input.value.toLowerCase();
+  const rows = document.querySelectorAll(`#tbl-${vizId} tbody tr`);
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    r.style.display = text.includes(filter) ? "" : "none";
+  });
+}
+
+function exportTableCsv(vizId){
+  const table = document.getElementById(`tbl-${vizId}`);
+  if(!table) return;
+  let csv = [];
+  const rows = table.querySelectorAll("tr");
+  rows.forEach(r => {
+    const cols = r.querySelectorAll("th, td");
+    const rowData = [];
+    cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
+    csv.push(rowData.join(","));
+  });
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `oilfield-telemetry-${vizId}.csv`;
+  a.click();
+}
+
+/* ---------- Conflict Confirmation Widget ---------- */
+function renderConflictBox(env){
+  if(!env.confirm) return "";
+  const c = env.confirm;
+  return `
+    <div class="conflict-box" data-claim="${c.claim_id || ''}">
+      <div class="c-msg">
+        <span>⚠️</span>
+        <div>${esc(c.prompt || 'Conflict detected between statement and ground-truth telemetry records.')}</div>
+      </div>
+      <div class="c-actions">
+        <button class="conflict-btn btn-confirm" onclick="handleClaimAction(this, 'confirm')">Keep on record (Unconfirmed)</button>
+        <button class="conflict-btn btn-dismiss" onclick="handleClaimAction(this, 'withdraw')">Withdraw statement</button>
+      </div>
+    </div>
+  `;
+}
+
+window.handleClaimAction = async function(btn, action){
+  const box = btn.closest(".conflict-box");
+  const claimId = box.dataset.claim;
+  if(claimId && action === 'confirm'){
+    await fetch(`/api/claims/${claimId}/confirm`, { method: "POST" });
+  }
+  box.outerHTML = `<div class="badge-pill ${action==='confirm'?'b-stale':'b-met'}" style="margin-top:10px;">
+    ${action === 'confirm' ? '✔ Maintained on record as unconfirmed statement' : '✖ Statement withdrawn'}
+  </div>`;
+};
+
+/* ---------- Chat UI Messaging ---------- */
+function appendMessage(role, html){
+  const chat = $("#chat-viewport");
+  const d = document.createElement("div");
+  d.className = `chat-row ${role}-msg`;
+
+  if(role === "user"){
+    d.innerHTML = `
+      <div class="msg-wrapper">
+        <div class="chat-bubble user-bubble">${html}</div>
+      </div>
+    `;
+  } else {
+    d.innerHTML = `
+      <div class="msg-wrapper">
+        <div class="chat-bubble copilot-bubble">
+          <div class="copilot-header">
+            <div class="copilot-author">
+              <span>🤖</span>
+              <span>Asset Intelligence Copilot</span>
+              <span class="mono" style="font-size:10px;padding:1px 5px;background:#1e293b;border-radius:4px;color:var(--txt-muted);">Grounded</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt-muted)">${new Date().toLocaleTimeString()}</div>
+          </div>
+          <div class="copilot-body">${html}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+function appendBotEnvelope(env){
+  const body = parseMarkdown(env.text || "") +
+               renderVisualContainer(env.visual) +
+               renderEvidence(env) +
+               renderConflictBox(env);
+  return appendMessage("copilot", body);
+}
+
+/* ---------- Query Execution ---------- */
+async function sendQuery(text){
+  text = (text || $("#chat-input").value).trim();
+  if(!text || !state.user) return;
+
+  $("#chat-input").value = "";
+  $("#btn-send").disabled = true;
+
+  appendMessage("user", parseMarkdown(text));
+  const loader = appendMessage("copilot", `<div style="display:flex;align-items:center;gap:8px;color:var(--txt-muted)"><span class="status-dot"></span><span>Querying 200 wells telemetry & parsing manuals...</span></div>`);
+
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: state.user,
+        conversation_id: state.cid,
+        message: text
+      })
+    });
+    const env = await res.json();
+    loader.remove();
+    state.cid = env.conversation_id;
+    appendBotEnvelope(env);
+    loadConversations();
+  } catch(e) {
+    loader.querySelector(".copilot-body").innerHTML = `<div style="color:var(--danger)">Telemetry Query Error: ${esc(e.message)}</div>`;
+  }
+
+  $("#btn-send").disabled = false;
+  $("#chat-input").focus();
+}
+
+/* ---------- Evidence Inspector Modal ---------- */
+window.inspectEvidence = async function(id, type){
+  $("#drawer-title").textContent = `Evidence: ${id}`;
+  $("#drawer-body").innerHTML = `<div style="color:var(--txt-muted)">Loading raw ground truth record...</div>`;
+  $("#drawer-backdrop").classList.add("open");
+  $("#side-drawer").classList.add("open");
+
+  try {
+    const res = await fetch(`/api/evidence/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if(!data.found){
+      $("#drawer-body").innerHTML = `
+        <div style="padding:14px;background:rgba(239,68,68,0.1);border-radius:8px;color:#fca5a5;">
+          No direct table record found for <b>${esc(id)}</b>. Referenced via document rule or synthesized fact.
+        </div>
+      `;
+      return;
+    }
+
+    let detailHtml = `<div style="margin-bottom:12px;"><span class="badge-pill b-met">${data.category.toUpperCase()}</span></div>`;
+    
+    if(data.category === "inspection"){
+      const i = data.data;
+      detailHtml += `
+        <div class="status-card-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+          <div class="status-metric-box"><div class="metric-label">Asset ID</div><div class="metric-val">${i.asset_id}</div></div>
+          <div class="status-metric-box"><div class="metric-label">Inspected Date</div><div class="metric-val" style="font-size:13px">${i.inspected_at}</div></div>
+          <div class="status-metric-box"><div class="metric-label">Inspector</div><div class="metric-val" style="font-size:13px">${i.inspector_name || i.inspector_user_id} (${i.method})</div></div>
+          <div class="status-metric-box"><div class="metric-label">Wellhead Temp</div><div class="metric-val">${i.wellhead_temp_c} °C</div></div>
+          <div class="status-metric-box"><div class="metric-label">Ambient Temp</div><div class="metric-val">${i.ambient_temp_c} °C</div></div>
+          <div class="status-metric-box"><div class="metric-label">Spill Detected</div><div class="metric-val">${i.spill_detected ? 'YES (' + i.spill_est_volume_bbl + ' bbl)' : 'NO'}</div></div>
+        </div>
+        ${i.notes ? `<div style="margin-top:10px;padding:10px;background:rgba(30,41,59,0.5);border-radius:8px;"><b>Inspector Remarks:</b><br/>${esc(i.notes)}</div>` : ''}
+      `;
+    } else if(data.category === "document"){
+      const doc = data.data;
+      detailHtml += `
+        <h4 style="color:#fff;margin-bottom:6px;">${esc(doc.title)}</h4>
+        <div style="font-size:11px;color:var(--txt-muted);margin-bottom:12px;">Path: ${esc(doc.path)}</div>
+        <div style="padding:14px;background:#090d16;border:1px solid var(--border);border-radius:8px;font-size:12.5px;max-height:350px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;">${esc(doc.text)}</div>
+      `;
+    } else if(data.category === "note"){
+      const n = data.data;
+      detailHtml += `
+        <div class="status-card-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+          <div class="status-metric-box"><div class="metric-label">Author</div><div class="metric-val" style="font-size:13px">${n.author_name || n.author_user_id}</div></div>
+          <div class="status-metric-box"><div class="metric-label">Date</div><div class="metric-val" style="font-size:13px">${n.created_at}</div></div>
+        </div>
+        <div style="padding:14px;background:#090d16;border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.6;">
+          <b>Note:</b><br/>${esc(n.text)}
+        </div>
+      `;
+    } else {
+      detailHtml += `<pre style="padding:12px;background:#090d16;border-radius:8px;color:#38bdf8;font-size:11.5px;overflow-x:auto;">${esc(JSON.stringify(data.data, null, 2))}</pre>`;
+    }
+
+    $("#drawer-body").innerHTML = detailHtml;
+  } catch(e) {
+    $("#drawer-body").innerHTML = `<div style="color:var(--danger)">Failed to load evidence: ${esc(e.message)}</div>`;
+  }
+};
+
+$("#drawer-close").onclick = () => {
+  $("#drawer-backdrop").classList.remove("open");
+  $("#side-drawer").classList.remove("open");
+};
+$("#drawer-backdrop").onclick = () => {
+  $("#drawer-backdrop").classList.remove("open");
+  $("#side-drawer").classList.remove("open");
+};
+
+/* ---------- System Memory & Auditing Modal ---------- */
+$("#btn-open-memory-audit").onclick = async () => {
+  $("#memory-modal").classList.add("open");
+  loadMemoryTabData("tab-corrections");
+};
+$("#memory-modal-close").onclick = () => $("#memory-modal").classList.remove("open");
+
+$$(".modal-tabs .m-tab-btn").forEach(btn => {
+  btn.onclick = () => {
+    $$(".modal-tabs .m-tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    loadMemoryTabData(btn.dataset.tab);
+  };
+});
+
+async function loadMemoryTabData(tab){
+  const container = $("#memory-modal-content");
+  container.innerHTML = `<div style="color:var(--txt-muted)">Loading memory store...</div>`;
+  try {
+    const res = await fetch("/api/memory");
+    const mem = await res.json();
+
+    if(tab === "tab-corrections"){
+      const corrs = mem.corrections || [];
+      if(!corrs.length){ container.innerHTML = `<div style="color:var(--txt-muted)">No runtime corrections recorded yet. (Try Q12 or Q13)</div>`; return; }
+      container.innerHTML = `
+        <table class="copilot-table">
+          <thead><tr><th>ID</th><th>Inspection / Well</th><th>Field</th><th>Original</th><th>Corrected</th><th>Reason</th><th>Author</th></tr></thead>
+          <tbody>
+            ${corrs.map(c => `
+              <tr>
+                <td><b>${c.correction_id}</b></td>
+                <td>${c.inspection_id || c.asset_id}</td>
+                <td><span class="mono">${c.field}</span></td>
+                <td style="color:#f87171">${c.original_value}</td>
+                <td style="color:#34d399;font-weight:700;">${c.corrected_value}</td>
+                <td>${esc(c.reason)}</td>
+                <td>${esc(c.author_name || c.author_user_id)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    } else if(tab === "tab-rules"){
+      const rules = mem.user_rules || [];
+      if(!rules.length){ container.innerHTML = `<div style="color:var(--txt-muted)">No custom team rules recorded yet. (Try Q14)</div>`; return; }
+      container.innerHTML = `
+        <table class="copilot-table">
+          <thead><tr><th>Scope</th><th>Value</th><th>Rule Text</th><th>Set By</th></tr></thead>
+          <tbody>
+            ${rules.map(r => `
+              <tr>
+                <td><span class="badge-pill b-met">${r.scope}: ${r.scope_value}</span></td>
+                <td><b>${r.value}</b></td>
+                <td>${esc(r.text)}</td>
+                <td>${esc(r.user_name || r.user_id)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    } else if(tab === "tab-shared"){
+      const notes = mem.shared_notes || [];
+      if(!notes.length){ container.innerHTML = `<div style="color:var(--txt-muted)">No shared well announcements recorded yet. (Try Q16)</div>`; return; }
+      container.innerHTML = `
+        <table class="copilot-table">
+          <thead><tr><th>Well</th><th>Author</th><th>Date</th><th>Shared Context</th></tr></thead>
+          <tbody>
+            ${notes.map(n => `
+              <tr>
+                <td><b>${n.asset_id}</b></td>
+                <td>${esc(n.author_name || n.author_user_id)}</td>
+                <td>${n.created_at.slice(0, 10)}</td>
+                <td>${esc(n.text)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    } else if(tab === "tab-claims"){
+      const claims = mem.claims || [];
+      if(!claims.length){ container.innerHTML = `<div style="color:var(--txt-muted)">No conflict claims recorded yet. (Try Q17)</div>`; return; }
+      container.innerHTML = `
+        <table class="copilot-table">
+          <thead><tr><th>Claim ID</th><th>User</th><th>Asset</th><th>Status</th><th>Claim Statement</th></tr></thead>
+          <tbody>
+            ${claims.map(c => `
+              <tr>
+                <td>#${c.claim_id}</td>
+                <td>${esc(c.user_name || c.user_id)}</td>
+                <td><b>${c.asset_id}</b></td>
+                <td><span class="badge-pill ${c.status==='confirmed'?'b-met':'b-stale'}">${c.status}</span></td>
+                <td>${esc(c.text)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--danger)">Error loading memory: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ---------- 18 Evaluation Scenarios Modal ---------- */
+$("#btn-open-scenario-drawer").onclick = () => openScenariosModal("scen-a1");
+$("#btn-quick-scenarios").onclick = () => openScenariosModal("scen-a1");
+$("#scenarios-modal-close").onclick = () => $("#scenarios-modal").classList.remove("open");
+
+$$("#scenarios-modal .modal-tabs .m-tab-btn").forEach(btn => {
+  btn.onclick = () => {
+    $$("#scenarios-modal .modal-tabs .m-tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderScenariosTab(btn.dataset.scenTab);
+  };
+});
+
+function openScenariosModal(tab){
+  $("#scenarios-modal").classList.add("open");
+  renderScenariosTab(tab);
+}
+
+function renderScenariosTab(tab){
+  const cat = tab.replace("scen-", "");
+  const list = SCENARIOS.filter(s => s.cat === cat);
+  const container = $("#scenarios-modal-content");
+
+  container.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${list.map(s => `
+        <div class="quick-card" onclick="runScenario('${s.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="qc-tag">${s.id} · Persona: ${s.user}</span>
+            <button class="viz-action-btn" style="color:var(--primary);border-color:var(--primary);">▶ Run</button>
+          </div>
+          <div class="qc-title" style="margin-top:4px;font-size:13.5px;font-weight:600;">${esc(s.query)}</div>
+          <div style="font-size:11.5px;color:var(--txt-muted);margin-top:6px;">Expected: ${esc(s.expected)}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+window.runScenario = function(id){
+  const sc = SCENARIOS.find(s => s.id === id);
+  if(!sc) return;
+  $("#scenarios-modal").classList.remove("open");
+
+  // Switch to required user if specified
+  if(sc.user && sc.user !== state.user){
+    state.user = sc.user;
+    $("#user-selector").value = sc.user;
+    updateUserDisplay();
+  }
+
+  sendQuery(sc.query);
+};
+
+/* ---------- Ingest Trigger ---------- */
+$("#btn-ingest-trigger").onclick = async () => {
+  if(!confirm("Re-ingest dataset roots (sample-data and test-data)? This reloads all fleet and asset records.")) return;
+  try {
+    const res = await fetch("/api/ingest", { method: "POST" });
+    const data = await res.json();
+    alert(`Ingest complete!\nLoaded ${data.counts?.wells || 200} wells and ${data.counts?.inspections || '39k+'} inspections.`);
+    boot();
+  } catch(e) {
+    alert("Ingest error: " + e.message);
+  }
+};
+
+/* ---------- Conversation Management ---------- */
+async function loadConversations(){
+  if(!state.user) return;
+  try {
+    const res = await fetch(`/api/conversations?user_id=${state.user}`);
+    const convs = await res.json();
+    state.convs = convs;
+
+    const container = $("#conv-list-container");
+    if(!convs.length){
+      container.innerHTML = `<div style="padding:14px;color:var(--txt-muted);font-size:12px;">No active conversations</div>`;
+      return;
+    }
+
+    container.innerHTML = convs.map(c => `
+      <div class="conv-item ${c.conversation_id === state.cid ? 'active' : ''}" data-id="${c.conversation_id}">
+        <span class="conv-title">${esc(c.title || 'Conversation #' + c.conversation_id)}</span>
+        <span class="del-btn" onclick="event.stopPropagation();deleteConversation(${c.conversation_id})">✕</span>
+      </div>
+    `).join("");
+
+    $$(".conv-item").forEach(el => {
+      el.onclick = () => {
+        const cid = Number(el.dataset.id);
+        openConversation(cid);
+      };
+    });
+  } catch(e) {
+    console.error("Failed to load conversations", e);
+  }
+}
+
+async function openConversation(cid){
+  state.cid = cid;
+  $$(".conv-item").forEach(x => x.classList.toggle("active", Number(x.dataset.id) === cid));
+  const chat = $("#chat-viewport");
+  chat.innerHTML = `<div style="color:var(--txt-muted);padding:20px;">Loading chat history...</div>`;
+
+  try {
+    const res = await fetch(`/api/conversations/${cid}/messages`);
+    const msgs = await res.json();
+    chat.innerHTML = "";
+    if(!msgs.length){
+      renderEmptyState();
+      return;
+    }
+    msgs.forEach(m => {
+      if(m.role === "user") appendMessage("user", parseMarkdown(m.content));
+      else if(m.envelope) appendBotEnvelope(m.envelope);
+      else appendMessage("copilot", parseMarkdown(m.content));
+    });
+  } catch(e) {
+    chat.innerHTML = `<div style="color:var(--danger)">Error loading history: ${esc(e.message)}</div>`;
+  }
+}
+
+async function deleteConversation(cid){
+  await fetch(`/api/conversations/${cid}`, { method: "DELETE" });
+  if(state.cid === cid){
+    state.cid = null;
+    renderEmptyState();
+  }
+  loadConversations();
+}
+
+$("#btn-new-chat").onclick = () => {
+  state.cid = null;
+  renderEmptyState();
+  loadConversations();
+  $("#chat-input").focus();
+};
+
+/* ---------- Empty State Banner ---------- */
+function renderEmptyState(){
+  const chat = $("#chat-viewport");
+  chat.innerHTML = `
+    <div class="empty-state-card">
+      <h2><span>🛢️</span> Asset Intelligence Copilot</h2>
+      <p>Operational AI assistant for well production, inspection thermal readings, compliance breaches, downtime analysis and multi-source evidence synthesis.</p>
+      
+      <div style="font-size:12px;font-weight:700;color:var(--txt-muted);text-transform:uppercase;letter-spacing:0.7px;">
+        Common Hackathon Scenarios
+      </div>
+      <div class="quick-scenarios-grid">
+        <div class="quick-card" onclick="runScenario('Q1')">
+          <div class="qc-tag">Status Card</div>
+          <div class="qc-title">Is WELL-0001 producing oil right now? Last inspection?</div>
+        </div>
+        <div class="quick-card" onclick="runScenario('Q2')">
+          <div class="qc-tag">Table</div>
+          <div class="qc-title">Which wells in Northeast Block 8 are not producing?</div>
+        </div>
+        <div class="quick-card" onclick="runScenario('Q3')">
+          <div class="qc-tag">Line Chart</div>
+          <div class="qc-title">13-week temperature trend for WELL-0001 (Wellhead vs Air)</div>
+        </div>
+        <div class="quick-card" onclick="runScenario('Q6')">
+          <div class="qc-tag">Bar Chart</div>
+          <div class="qc-title">Top 3 wells in Northeast Block 7 with most downtime</div>
+        </div>
+        <div class="quick-card" onclick="runScenario('Q7')">
+          <div class="qc-tag">GIS Spill Map</div>
+          <div class="qc-title">Northeast Block 8 wells with real spills in last 90 days</div>
+        </div>
+        <div class="quick-card" onclick="runScenario('Q8')">
+          <div class="qc-tag">Heatmap</div>
+          <div class="qc-title">2026 spills by geographic area and month matrix</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- User & System Boot ---------- */
+function updateUserDisplay(){
+  const u = state.users.find(x => x.user_id === state.user);
+  if(u){
+    $("#user-id-badge").textContent = u.user_id;
+    $("#user-role-pill").textContent = u.role.replace(/_/g, " ").toUpperCase();
+    $("#user-team-label").textContent = u.team_id || "Fleet Operations";
+  }
+}
+
+async function boot(){
+  try {
+    // 1. Health & Database Stats
+    const h = await (await fetch("/api/health")).json();
+    $("#db-stats").innerHTML = `<span class="highlight">${h.wells}</span> Wells · <span class="highlight">${h.inspections.toLocaleString()}</span> Inspections · Fleet Date: <span class="highlight">${h.today}</span>`;
+
+    // 2. Users
+    const users = await (await fetch("/api/users")).json();
+    state.users = users;
+    $("#user-selector").innerHTML = users.map(u => `
+      <option value="${u.user_id}">${u.name} — ${u.role.replace(/_/g, " ")}</option>
+    `).join("");
+
+    state.user = users.find(u => u.user_id === "U-201")?.user_id || users[0].user_id;
+    $("#user-selector").value = state.user;
+    updateUserDisplay();
+
+    $("#user-selector").onchange = () => {
+      state.user = $("#user-selector").value;
+      state.cid = null;
+      updateUserDisplay();
+      renderEmptyState();
+      loadConversations();
+    };
+
+    // 3. Suggestions Carousel
+    const suggs = SCENARIOS.slice(0, 10).map(s => s.query);
+    $("#suggestions-carousel").innerHTML = suggs.map(s => `
+      <span class="sugg-chip" onclick="sendQuery('${esc(s)}')">${esc(s.length > 55 ? s.slice(0, 52) + '…' : s)}</span>
+    `).join("");
+
+    // 4. Initial empty state & conversations
+    renderEmptyState();
+    loadConversations();
+  } catch(e) {
+    console.error("Boot error", e);
+    $("#db-stats").textContent = "Backend offline — run: uvicorn app.main:app in backend/";
+  }
+}
+
+/* Event Listeners */
+$("#btn-send").onclick = () => sendQuery();
+$("#chat-input").onkeydown = e => {
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendQuery();
+  }
+};
+
+boot();
+</script>
+
+<!-- ═══════════════ Fleet Analytics Dashboard (self-contained module) ═══════════════ -->
+<style id="fd-styles">
+#fd-overlay{position:fixed;inset:0;z-index:2100;background:var(--bg-dark);display:none;overflow-y:auto;padding:0 0 40px}
+#fd-overlay.open{display:block}
+.fd-head{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:14px 26px;background:rgba(10,14,23,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border)}
+.fd-head h1{font-size:17px;font-weight:700;color:var(--txt-main);margin:0}
+.fd-head .sub{font-size:12px;color:var(--txt-muted)}
+.fd-head .sp{flex:1}
+.fd-btn{border:1px solid var(--border);background:var(--bg-card);color:var(--txt-dim);border-radius:8px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+.fd-btn:hover{color:var(--txt-main);border-color:var(--primary)}
+.fd-btn.primary{background:var(--primary);border-color:var(--primary);color:#06121c;font-weight:600}
+.fd-wrap{max-width:1280px;margin:0 auto;padding:18px 26px}
+.fd-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:16px}
+.fd-kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:13px 15px}
+.fd-kpi .l{font-size:10.5px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.8px}
+.fd-kpi .v{font-size:21px;font-weight:800;color:var(--txt-main);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.fd-kpi .s{font-size:11px;color:var(--txt-muted);margin-top:2px}
+.fd-kpi.bad .v{color:var(--danger)} .fd-kpi.warn .v{color:var(--warning)} .fd-kpi.good .v{color:var(--success)}
+.fd-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fd-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.fd-card.wide{grid-column:1/-1}
+.fd-card .t{padding:10px 14px;font-size:12.5px;color:var(--txt-dim);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.fd-card .t b{color:var(--txt-main);font-weight:600}
+.fd-card .b{padding:10px}
+.fd-card svg.fd-chart{display:block;width:100%;height:auto}
+@media(max-width:980px){.fd-grid{grid-template-columns:1fr}}
+#fd-map{height:420px;border-radius:8px;background:#0b1120}
+.fd-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.fd-table th{color:var(--txt-muted);text-align:left;font-weight:600;padding:7px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.fd-table td{padding:6px 12px;border-bottom:1px solid rgba(34,48,73,.5);color:var(--txt-dim)}
+.fd-table tr:last-child td{border-bottom:none}
+.fd-pill{display:inline-block;padding:1px 9px;border-radius:10px;font-size:11px;font-weight:600}
+.fd-pill.g{background:var(--success-glow);color:var(--success)}
+.fd-pill.r{background:var(--danger-glow);color:var(--danger)}
+.fd-pill.y{background:var(--warning-glow);color:var(--warning)}
+</style>
+
+<div id="fd-overlay">
+  <div class="fd-head">
+    <h1>📊 Fleet Analytics Dashboard</h1>
+    <span class="sub" id="fd-asof"></span>
+    <span class="sp"></span>
+    <button class="fd-btn" id="fd-refresh">↻ Refresh</button>
+    <button class="fd-btn primary" id="fd-close">✕ Back to Copilot</button>
+  </div>
+  <div class="fd-wrap">
+    <div class="fd-kpis" id="fd-kpis"></div>
+    <div class="fd-grid">
+      <div class="fd-card wide"><div class="t"><b>Fleet downtime trend</b><span>not-producing inspections × 7 days / week</span></div><div class="b" id="fd-trend"></div></div>
+      <div class="fd-card"><div class="t"><b>Valid spills by month</b><span>corrections removed</span></div><div class="b" id="fd-spills"></div></div>
+      <div class="fd-card"><div class="t"><b>Downtime by area</b><span>last 4 months</span></div><div class="b" id="fd-areas"></div></div>
+      <div class="fd-card"><div class="t"><b>Top wells by downtime</b><span>last 4 months</span></div><div class="b" id="fd-top"></div></div>
+      <div class="fd-card"><div class="t"><b>Maintenance spend by equipment</b><span id="fd-spend-y"></span></div><div class="b" id="fd-cost"></div></div>
+      <div class="fd-card"><div class="t"><b>Which region runs hotter</b><span>avg wellhead − air, current state</span></div><div class="b" id="fd-heat"></div></div>
+      <div class="fd-card"><div class="t"><b>Maintenance spend trend</b><span>not collected per month — see chat for queries</span></div><div class="b" style="color:var(--txt-muted);font-size:12.5px;padding:14px">Ask the copilot: <i>"What did we spend on flowlines in 2026?"</i> — every figure is computed deterministically from the maintenance ledger with cited evidence.</div></div>
+      <div class="fd-card wide"><div class="t"><b>🛠️ Crew priority board</b><span id="fd-crew-n">open actions for the morning standup</span></div><div class="b" id="fd-crew"></div></div>
+      <div class="fd-card"><div class="t"><b>Estimated production loss</b><span>assumption-based, tunable</span></div><div class="b" id="fd-loss"></div></div>
+      <div class="fd-card wide"><div class="t"><b>Fleet status map</b><span>green = producing · red = not producing (latest inspection)</span></div><div class="b"><div id="fd-map"></div></div></div>
+      <div class="fd-card wide"><div class="t"><b>Watchlist — wells not producing right now</b><span id="fd-wl-n"></span></div><div class="b" id="fd-watch"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const fmt$=n=>n>=1e6?("$"+(n/1e6).toFixed(2)+"M"):n>=1000?("$"+(n/1000).toFixed(0)+"K"):("$"+Math.round(n));
+  let data=null, mapObj=null, layer=null;
+
+  // nav button in the existing top-nav
+  function addNav(){
+    const nav=document.querySelector(".nav-actions");
+    if(!nav||document.getElementById("btn-fleet-dash"))return;
+    const b=document.createElement("button");
+    b.className="scenario-pill-btn";b.id="btn-fleet-dash";
+    b.innerHTML='<span>📊</span> Fleet Dashboard';
+    b.onclick=open;nav.insertBefore(b,nav.firstChild);
+  }
+
+  function open(){document.getElementById("fd-overlay").classList.add("open");load();}
+  function close(){document.getElementById("fd-overlay").classList.remove("open");}
+
+  async function load(){
+    try{
+      data=await(await fetch("/api/dashboard")).json();
+      render();
+    }catch(e){
+      $("#fd-kpis").innerHTML="<div class='fd-kpi bad'><div class='l'>error</div><div class='v'>API offline</div></div>";
+    }
+    try{
+      const cb=await(await fetch("/api/crew-board")).json();
+      const rows=cb.data.board, pcls={P1:"r",P2:"y",P3:"g"};
+      $("#fd-crew-n").textContent=rows.length+" open actions · "+cb.data.counts.P1+" P1, "+cb.data.counts.P2+" P2, "+cb.data.counts.P3+" P3";
+      $("#fd-crew").innerHTML=`<table class="fd-table"><thead><tr><th>Pri</th><th>Well</th><th>Action</th><th>Why</th><th>Due</th></tr></thead><tbody>`+
+        rows.slice(0,25).map(b=>`<tr><td><span class="fd-pill ${pcls[b.priority]||"g"}">${b.priority}</span></td>`+
+          `<td style="color:var(--txt-main);font-weight:600">${esc(b.asset_id)}</td><td>${esc(b.action)}</td>`+
+          `<td>${esc(b.why.length>95?b.why.slice(0,94)+"…":b.why)}</td><td style="white-space:nowrap">${esc(b.due)}</td></tr>`).join("")+
+        `</tbody></table>`+(rows.length>25?`<div style="padding:8px 12px;color:var(--txt-muted);font-size:12px">…and ${rows.length-25} more — ask the copilot or filter by area.</div>`:"");
+    }catch(e){$("#fd-crew").innerHTML="<div style='padding:12px;color:var(--txt-muted)'>board unavailable</div>";}
+    try{
+      const ls=await(await fetch("/api/loss-estimate?days=30")).json();
+      const areas=Object.entries(ls.data.by_area).map(([a,v])=>({x:a,y:Math.round(v.bbl)})).sort((p,q)=>q.y-p.y);
+      $("#fd-loss").innerHTML=
+        `<div style="padding:4px 2px 10px"><div style="font-size:24px;font-weight:800;color:var(--warning)">${ls.data.total_bbl.toLocaleString()} bbl</div>`+
+        `<div style="font-size:13px;color:var(--txt-dim)">≈ USD ${ls.data.total_usd.toLocaleString()} over the last 30 days · ${ls.data.wells} wells affected</div>`+
+        `<div style="font-size:11px;color:var(--txt-muted);margin-top:4px">Assumption-based (downtime weeks × rate per well type × price). Both knobs are deployment settings: LOSS_RATES_JSON and OIL_PRICE_USD.</div></div>`+
+        hBar(areas,v=>v.toLocaleString()+" bbl");
+    }catch(e){$("#fd-loss").innerHTML="<div style='padding:12px;color:var(--txt-muted)'>estimate unavailable</div>";}
+  }
+
+  function render(){
+    const k=data.kpis;
+    $("#fd-asof").textContent=`${k.wells} wells · data as of ${data.today} · deterministic figures from SQLite`;
+    $("#fd-kpis").innerHTML=[
+      kpi("Wells online",k.wells,"across 7 areas",""),
+      kpi("Not producing now",k.down_now,((k.down_now/k.wells)*100).toFixed(1)+"% of fleet",k.down_now>20?"bad":"warn"),
+      kpi("Avg wellhead − air",k.avg_delta+" °C","current readings","good"),
+      kpi("Downtime (30 d)",k.downtime_30d+" d","fleet-wide","warn"),
+      kpi("Spills (30 d)",k.spills_30d,k.volume_30d+" bbl total",k.spills_30d>25?"bad":"warn"),
+      kpi("Open regulatory events",k.open_events,"NOVs, verifications, reports","bad"),
+      kpi("Open fines",fmt$(k.open_fines),"accrued on record","bad"),
+      kpi("Maintenance spend YTD",fmt$(k.spend_ytd),"all equipment kinds",""),
+    ].join("");
+    $("#fd-trend").innerHTML=lineArea(data.trend.map(p=>({x:p.week.slice(5),y:p.days})),"days down");
+    $("#fd-spills").innerHTML=vBar(data.spills_by_month.labels.map((l,i)=>({x:l.slice(5),y:data.spills_by_month.counts[i]})),"spills");
+    $("#fd-areas").innerHTML=hBar(data.area_downtime.map(p=>({x:p.area,y:p.days})),v=>v+" d");
+    $("#fd-top").innerHTML=hBar(data.top_wells.map(p=>({x:p.well,y:p.days})),v=>v+" d");
+    $("#fd-spend-y").textContent="calendar year of \"today\"";
+    $("#fd-cost").innerHTML=hBar(data.cost_by_equipment.map(p=>({x:p.kind,y:p.usd})),fmt$);
+    const byArea={};
+    data.fleet.forEach(f=>{if(f.delta==null)return;(byArea[f.area]=byArea[f.area]||{s:0,n:0});byArea[f.area].s+=f.delta;byArea[f.area].n++;});
+    const heat=Object.entries(byArea).map(([a,v])=>({x:a,y:+(v.s/v.n).toFixed(1)})).sort((a,b)=>b.y-a.y);
+    $("#fd-heat").innerHTML=hBar(heat,v=>"+"+v+" °C");
+    $("#fd-wl-n").textContent=data.watchlist.length+" wells";
+    $("#fd-watch").innerHTML=`<table class="fd-table"><thead><tr><th>Well</th><th>Area</th><th>Wellhead − air</th><th>Recorded status</th><th>Reason</th><th>Last inspected</th></tr></thead><tbody>`+
+      data.watchlist.slice(0,60).map(w=>`<tr><td style="color:var(--txt-main);font-weight:600">${w.asset_id}</td><td>${esc(w.area)}</td><td>${w.delta!=null?w.delta+" °C":"—"}</td><td>${esc(w.recorded_status||"—")}</td><td>${esc(w.reason||"")}</td><td>${esc(w.last_inspected||"")}</td></tr>`).join("")+
+      `</tbody></table>`;
+    drawMap();
+  }
+  function kpi(l,v,s,cls){return `<div class="fd-kpi ${cls||""}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`;}
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+  /* ---- SVG charts ---- */
+  function lineArea(pts,label){
+    if(!pts.length)return"<div style='padding:14px;color:var(--txt-muted)'>no data</div>";
+    const W=1100,H=230,P=46,y1=Math.max(...pts.map(p=>p.y))*1.15||1;
+    const X=i=>P+(W-2*P)*(i/Math.max(pts.length-1,1)),Y=v=>H-P-(H-2*P)*(v/y1);
+    let g="";
+    for(let i=0;i<=4;i++){const yy=y1*i/4;g+=`<line x1="${P}" x2="${W-P}" y1="${Y(yy)}" y2="${Y(yy)}" stroke="#1c2942"/><text x="${P-7}" y="${Y(yy)+4}" fill="var(--txt-muted)" font-size="10" text-anchor="end">${yy.toFixed(0)}</text>`;}
+    const step=Math.max(1,Math.ceil(pts.length/13));
+    pts.forEach((p,i)=>{if(i%step===0)g+=`<text x="${X(i)}" y="${H-P+15}" fill="var(--txt-muted)" font-size="10" text-anchor="middle">${p.x}</text>`;});
+    const path=pts.map((p,i)=>`${i?"L":"M"}${X(i)},${Y(p.y)}`).join(" ");
+    g+=`<path d="${path} L${X(pts.length-1)},${H-P} L${X(0)},${H-P} Z" fill="rgba(56,189,248,.12)"/>`;
+    g+=`<path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2.4"/>`;
+    pts.forEach((p,i)=>g+=`<circle cx="${X(i)}" cy="${Y(p.y)}" r="2.8" fill="var(--primary)"/>`);
+    return `<svg class="fd-chart" viewBox="0 0 ${W} ${H}">${g}<text x="${P}" y="16" fill="var(--txt-dim)" font-size="11">${label}</text></svg>`;
+  }
+  function vBar(pts,label){
+    if(!pts.length)return"<div style='padding:14px;color:var(--txt-muted)'>no data</div>";
+    const W=540,H=230,P=42,y1=Math.max(...pts.map(p=>p.y))*1.2||1;
+    const X=i=>P+(W-2*P)*((i+.5)/pts.length),Y=v=>H-P-(H-2*P)*(v/y1),bw=Math.min(46,(W-2*P)/pts.length*.6);
+    let g="";
+    for(let i=0;i<=4;i++){const yy=y1*i/4;g+=`<line x1="${P}" x2="${W-P}" y1="${Y(yy)}" y2="${Y(yy)}" stroke="#1c2942"/><text x="${P-7}" y="${Y(yy)+4}" fill="var(--txt-muted)" font-size="10" text-anchor="end">${yy.toFixed(0)}</text>`;}
+    pts.forEach((p,i)=>{
+      const h=(H-2*P)*(p.y/y1);
+      g+=`<rect x="${X(i)-bw/2}" y="${Y(p.y)}" width="${bw}" height="${Math.max(h,1)}" rx="4" fill="var(--oil-gold)" opacity=".85"/>`+
+         `<text x="${X(i)}" y="${Y(p.y)-6}" fill="var(--txt-main)" font-size="10.5" text-anchor="middle" font-weight="600">${p.y||""}</text>`+
+         `<text x="${X(i)}" y="${H-P+15}" fill="var(--txt-muted)" font-size="10" text-anchor="middle">${p.x}</text>`;
+    });
+    return `<svg class="fd-chart" viewBox="0 0 ${W} ${H}">${g}<text x="${P}" y="16" fill="var(--txt-dim)" font-size="11">${label}</text></svg>`;
+  }
+  function hBar(pts,fmt){
+    if(!pts.length)return"<div style='padding:14px;color:var(--txt-muted)'>no data</div>";
+    const W=540,rowH=30,P=10,L=170,y1=Math.max(...pts.map(p=>p.y))||1,H=P*2+pts.length*rowH;
+    let g="";
+    pts.forEach((p,i)=>{
+      const y=P+i*rowH,bw=(W-L-90)*(p.y/y1);
+      g+=`<text x="${L-8}" y="${y+rowH/2+4}" fill="var(--txt-dim)" font-size="11.5" text-anchor="end">${esc(p.x.length>26?p.x.slice(0,25)+"…":p.x)}</text>`+
+         `<rect x="${L}" y="${y+5}" width="${Math.max(bw,2)}" height="${rowH-12}" rx="5" fill="var(--primary)" opacity=".8"/>`+
+         `<text x="${L+Math.max(bw,2)+7}" y="${y+rowH/2+4}" fill="var(--txt-main)" font-size="11.5" font-weight="600">${fmt(p.y)}</text>`;
+    });
+    return `<svg class="fd-chart" viewBox="0 0 ${W} ${H}" style="max-height:${Math.max(H,120)}px">${g}</svg>`;
+  }
+
+  /* ---- fleet map (Leaflet, fallback SVG) ---- */
+  function drawMap(){
+    const el=$("#fd-map");
+    if(!window.L){
+      el.innerHTML="<div style='padding:14px;color:var(--txt-muted)'>Leaflet unavailable</div>";return;
+    }
+    setTimeout(()=>{
+      if(!mapObj){
+        mapObj=L.map(el,{zoomControl:true,attributionControl:false}).setView([31.9,-102.3],9);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",{maxZoom:16,opacity:.6}).addTo(mapObj);
+        layer=L.layerGroup().addTo(mapObj);
+      }
+      layer.clearLayers();
+      const pts=data.fleet.filter(f=>f.lat!=null);
+      pts.forEach(f=>{
+        L.circleMarker([f.lat,f.lon],{radius:5,weight:1,color:f.producing?"#10b981":"#ef4444",
+          fillColor:f.producing?"#10b981":"#ef4444",fillOpacity:.85})
+          .bindPopup(`<b>${f.asset_id}</b><br>${f.producing?"🟢 producing":"🔴 not producing"}<br>wellhead − air: ${f.delta!=null?f.delta+" °C":"—"}`)
+          .addTo(layer);
+      });
+      // the overlay just became visible: force the Leaflet SVG renderer to pick up
+      // the container size, otherwise the marker pane stays 0x0
+      mapObj.invalidateSize({animate:false});
+      const r=mapObj._renderer; if(r&&r._update)r._update();
+      setTimeout(()=>{mapObj.invalidateSize({animate:false}); if(r&&r._update)r._update();},120);
+      const lats=pts.map(p=>p.lat),lons=pts.map(p=>p.lon);
+      if(pts.length)mapObj.fitBounds([[Math.min(...lats),Math.min(...lons)],[Math.max(...lats),Math.max(...lons)]],{padding:[18,18]});
+    },80);
+  }
+
+  document.addEventListener("DOMContentLoaded",addNav);
+  if(document.readyState!=="loading")addNav();
+  document.getElementById("fd-close").onclick=close;
+  document.getElementById("fd-refresh").onclick=load;
+})();
+</script>
+</body>
+
+<!-- ═══════════════ Add-your-own-dataset (self-contained module) ═══════════════ -->
+<style id="up-styles">
+#up-file-label{display:block;border:1.5px dashed var(--border-light);border-radius:10px;padding:22px;text-align:center;color:var(--txt-dim);cursor:pointer;transition:.15s}
+#up-file-label:hover{border-color:var(--primary);color:var(--txt-main);background:var(--bg-card-hover)}
+#up-status{font-size:12.5px;margin-top:10px;min-height:18px}
+#up-status.ok{color:var(--success)} #up-status.err{color:var(--danger)}
+.up-hint{font-size:11.5px;color:var(--txt-muted);margin-top:10px;line-height:1.6}
+.up-row{display:flex;gap:8px;margin-top:12px}
+.up-input{flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--txt-main);padding:8px 11px;font-size:13px}
+.up-btn{border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.up-btn.primary{background:var(--primary);color:#06121c}
+.up-btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.up-btn:disabled{opacity:.5;cursor:default}
+</style>
+
+<div class="modal-dialog-wrap" id="upload-modal">
+  <div class="modal-content-card">
+    <div class="drawer-header">
+      <div>
+        <h3>Add your own dataset</h3>
+        <p style="font-size:12px;color:var(--txt-muted);margin-top:2px">Bring your field and query it like the demo — same schema, same evidence-backed answers</p>
+      </div>
+      <button class="drawer-close-btn" id="upload-modal-close">&times;</button>
+    </div>
+    <div style="padding:18px 20px">
+      <label id="up-file-label" for="up-file">📦 Drop or choose a <b>.zip</b> of your dataset<br><span style="font-size:11.5px;color:var(--txt-muted)">zip must contain <code>fleet/</code> and <code>assets/</code> folders</span></label>
+      <input type="file" id="up-file" accept=".zip" style="display:none"/>
+      <div class="up-row">
+        <input class="up-input" id="up-name" placeholder="Dataset name (e.g. Permian-lease-7)" maxlength="40"/>
+        <button class="up-btn primary" id="up-go">Add to copilot</button>
+      </div>
+      <div id="up-status"></div>
+      <div class="up-hint">
+        Expected layout (same as the challenge dataset): <b>fleet/</b> with areas.json, users.json and the markdown manuals/SOPs, and <b>assets/WELL-XXXX/</b> per well with metadata.json, inspections.jsonl, maintenance.jsonl, context.jsonl.
+        New wells are <b>merged</b> into the copilot next to the demo data — re-uploading updates without duplicating. "Today" follows the newest data you add, so your field is asked about in its own present.
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0"/>
+      <button class="up-btn danger" id="up-reset">↺ Reset everything to challenge data</button>
+      <div class="up-hint">Removes uploaded datasets, memory and corrections, and reloads the 600-well demo store.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  function addNav(){
+    const nav=document.querySelector(".nav-actions");
+    if(!nav||document.getElementById("btn-add-dataset"))return;
+    const b=document.createElement("button");
+    b.className="scenario-pill-btn";b.id="btn-add-dataset";
+    b.innerHTML='<span>📥</span> Add Dataset';
+    b.onclick=()=>$("#upload-modal").classList.add("open");
+    nav.insertBefore(b,nav.firstChild);
+  }
+  if(document.readyState!=="loading")addNav();
+  document.addEventListener("DOMContentLoaded",addNav);
+
+  $("#upload-modal-close").onclick=()=>$("#upload-modal").classList.remove("open");
+  $("#up-file").onchange=e=>{
+    const f=e.target.files[0];
+    if(f)$("#up-name").value=$("#up-name").value||f.name.replace(/\.zip$/i,"");
+  };
+  function status(msg,cls){const s=$("#up-status");s.textContent=msg;s.className=cls||"";}
+  $("#up-go").onclick=async()=>{
+    const f=$("#up-file").files[0];
+    if(!f){status("choose a .zip first","err");return;}
+    $("#up-go").disabled=true;
+    status("uploading and ingesting… (large datasets take a moment)");
+    try{
+      const fd=new FormData();
+      fd.append("file",f);
+      fd.append("name",$("#up-name").value||f.name);
+      const r=await fetch("/api/upload-dataset",{method:"POST",body:fd});
+      const d=await r.json();
+      if(!r.ok){status("✖ "+(d.error||"upload failed")+(d.hint?" — "+d.hint:""),"err");}
+      else{
+        status("✔ added \""+d.name+"\" — store now holds "+d.totals.wells+" wells across "+
+               d.totals.areas+" areas · today is "+d.totals.today+" · ask about your wells!","ok");
+        setTimeout(()=>location.reload(),1800);
+      }
+    }catch(e){status("✖ "+e.message,"err");}
+    $("#up-go").disabled=false;
+  };
+  $("#up-reset").onclick=async()=>{
+    if(!confirm("Remove uploaded datasets and all memory, and reload the challenge data?"))return;
+    $("#up-reset").disabled=true;
+    try{
+      const r=await fetch("/api/reset-data",{method:"POST"});
+      const d=await r.json();
+      status(r.ok?"✔ reset — store back to the challenge data":"✖ reset failed","ok");
+      setTimeout(()=>location.reload(),1200);
+    }catch(e){status("✖ "+e.message,"err");}
+    $("#up-reset").disabled=false;
+  };
+})();
+</script>
+</body>
+
+<!-- ═══════════════ Connect-your-own-AI-key (self-contained module) ═══════════════ -->
+<style id="llm-styles">
+#llm-modal .prov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px}
+#llm-modal .prov{border:1px solid var(--border);border-radius:10px;background:var(--bg-card);color:var(--txt-dim);padding:10px 6px;text-align:center;cursor:pointer;font-size:12.5px}
+#llm-modal .prov:hover{color:var(--txt-main);border-color:var(--primary)}
+#llm-modal .prov.on{border-color:var(--primary);color:var(--txt-main);background:var(--bg-card-hover)}
+#llm-modal label{display:block;font-size:11px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.7px;margin:12px 0 5px}
+#llm-modal .up-input{width:100%}
+#llm-status{font-size:12.5px;margin-top:12px;min-height:18px;line-height:1.5}
+#llm-status.ok{color:var(--success)} #llm-status.err{color:var(--danger)}
+#llm-note{font-size:11.5px;color:var(--txt-muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--border);padding-top:12px}
+.llm-actions{display:flex;gap:8px;margin-top:14px}
+#btn-connect-ai.connected{border-color:var(--success)!important;color:var(--success)}
+</style>
+
+<div class="modal-dialog-wrap" id="llm-modal">
+  <div class="modal-content-card">
+    <div class="drawer-header">
+      <div>
+        <h3>Connect your AI key</h3>
+        <p style="font-size:12px;color:var(--txt-muted);margin-top:2px">Bring your own key — the copilot works without one, this upgrades the conversation quality</p>
+      </div>
+      <button class="drawer-close-btn" id="llm-modal-close">&times;</button>
+    </div>
+    <div style="padding:18px 20px">
+      <div class="prov-grid" id="llm-provs">
+        <div class="prov on" data-p="openrouter">OpenRouter<br><span style="font-size:10px;color:var(--txt-muted)">free models</span></div>
+        <div class="prov" data-p="openai">OpenAI</div>
+        <div class="prov" data-p="gemini">Google Gemini</div>
+        <div class="prov" data-p="ollama">Ollama<br><span style="font-size:10px;color:var(--txt-muted)">local, no key</span></div>
+        <div class="prov" data-p="custom">Custom</div>
+      </div>
+      <div id="llm-custom-url" style="display:none">
+        <label>Base URL (OpenAI-compatible)</label>
+        <input class="up-input" id="llm-base" placeholder="https://your-gateway/v1"/>
+      </div>
+      <label>API key <span style="text-transform:none" id="llm-key-hint"></span></label>
+      <input class="up-input" id="llm-key" type="password" placeholder="sk-or-v1-… / sk-…"/>
+      <label>Model ID</label>
+      <input class="up-input" id="llm-model"/>
+      <div id="llm-status"></div>
+      <div class="llm-actions">
+        <button class="up-btn primary" id="llm-test">① Test key</button>
+        <button class="up-btn primary" id="llm-save">② Connect</button>
+        <button class="up-btn danger" id="llm-remove">Disconnect</button>
+      </div>
+      <div id="llm-note">
+        <b>What the key does:</b> it powers the language layer — natural phrasing of answers and better
+        handling of unusual questions. It can never change a number: every figure, id and citation is
+        computed by the deterministic engine first, and the model is only allowed to rephrase that.
+        <br><b>Where the key lives:</b> on this deployment only, in <code>llm_settings.json</code>
+        (gitignored). It is never returned to the browser and never committed. For a permanent Space
+        deployment, the owner can instead set LLM_* environment variables.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const PRESETS={
+    openrouter:{url:"https://openrouter.ai/api/v1",model:"google/gemma-4-31b-it:free",key:"sk-or-v1-…",needKey:true},
+    openai:{url:"https://api.openai.com/v1",model:"gpt-4o-mini",key:"sk-…",needKey:true},
+    gemini:{url:"https://generativelanguage.googleapis.com/v1beta/openai",model:"gemini-2.0-flash",key:"AIza…",needKey:true},
+    ollama:{url:"http://localhost:11434/v1",model:"gemma4:e4b",key:"ollama",needKey:false},
+    custom:{url:"",model:"",key:"sk-…",needKey:true}
+  };
+  let prov="openrouter";
+
+  function setProv(p){
+    prov=p;
+    document.querySelectorAll("#llm-provs .prov").forEach(el=>el.classList.toggle("on",el.dataset.p===p));
+    const pre=PRESETS[p];
+    $("#llm-custom-url").style.display = p==="custom" ? "" : "none";
+    if(p!=="custom")$("#llm-base").value=pre.url;
+    $("#llm-model").value=pre.model;
+    $("#llm-key").placeholder=pre.key;
+    $("#llm-key-hint").textContent = pre.needKey ? "" : "(not required)";
+  }
+  document.querySelectorAll("#llm-provs .prov").forEach(el=>el.onclick=()=>setProv(el.dataset.p));
+
+  function status(msg,cls){const s=$("#llm-status");s.innerHTML=msg;s.className=cls||"";}
+  function esc(x){return String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function refreshBtn(st){
+    const b=$("#btn-connect-ai");
+    b.classList.toggle("connected",!!st.configured);
+    b.innerHTML=st.configured?('<span>🔑</span> AI connected · '+esc(st.model)):'<span>🔑</span> Connect AI';
+  }
+  async function loadStatus(){
+    try{
+      const st=await(await fetch("/api/llm")).json();
+      if(st.configured){
+        setProv(PRESETS[st.provider]?st.provider:"custom");
+        $("#llm-base").value=st.base_url;$("#llm-model").value=st.model;
+        $("#llm-key").placeholder=st.key_masked||"••••";
+        status("connected: <b>"+esc(st.model)+"</b> via "+esc(st.provider)+" (key "+esc(st.key_masked||"—")+", source: "+esc(st.source)+")","ok");
+      }
+      refreshBtn(st);
+    }catch(e){}
+  }
+
+  function payload(){
+    return {provider:prov, base_url:$("#llm-base").value, model:$("#llm-model").value,
+            api_key:$("#llm-key").value};
+  }
+
+  $("#llm-test").onclick=async()=>{
+    const p=payload();
+    if(!p.base_url||!p.model){status("pick a provider and model first","err");return;}
+    status("pinging "+esc(p.base_url)+" …");
+    $("#llm-test").disabled=true;
+    try{
+      const r=await(await fetch("/api/llm/test",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(p)})).json();
+      status(r.ok ? "✔ key works — model replied in "+r.latency_ms+' ms: "'+esc(r.sample)+'"'
+                  : "✖ "+esc(r.error||"test failed"),"");
+      if(r.ok)$("#llm-status").className="ok";
+    }catch(e){status("✖ "+esc(e.message),"err");}
+    $("#llm-test").disabled=false;
+  };
+
+  $("#llm-save").onclick=async()=>{
+    const p=payload();
+    if(!p.base_url||!p.model){status("base URL and model are required","err");return;}
+    $("#llm-save").disabled=true;
+    try{
+      const r=await(await fetch("/api/llm",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(p)})).json();
+      if(r.ok){status("✔ connected — from the next answer the copilot speaks with your model (numbers stay deterministic)","ok");refreshBtn(r);}
+      else status("✖ "+esc(r.error||"failed"),"err");
+    }catch(e){status("✖ "+esc(e.message),"err");}
+    $("#llm-save").disabled=false;
+  };
+
+  $("#llm-remove").onclick=async()=>{
+    try{
+      const r=await(await fetch("/api/llm",{method:"DELETE"})).json();
+      status(r.ok?"✔ disconnected — fully deterministic mode":"✖ "+esc(r.error||""),"ok");
+      refreshBtn(r);
+    }catch(e){status("✖ "+esc(e.message),"err");}
+  };
+
+  function addNav(){
+    const nav=document.querySelector(".nav-actions");
+    if(!nav||document.getElementById("btn-connect-ai"))return;
+    const b=document.createElement("button");
+    b.className="scenario-pill-btn";b.id="btn-connect-ai";
+    b.innerHTML='<span>🔑</span> Connect AI';
+    b.onclick=()=>{$("#llm-modal").classList.add("open");loadStatus();};
+    nav.insertBefore(b,nav.firstChild);
+  }
+  if(document.readyState!=="loading")addNav();
+  document.addEventListener("DOMContentLoaded",addNav);
+  $("#llm-modal-close").onclick=()=>$("#llm-modal").classList.remove("open");
+  setProv(prov);   // prefill base URL + a sensible model before the user touches anything
+  loadStatus();
+})();
+</script>
+</body>
+
+<!-- ═══════════════ Animated oilfield theme (self-contained, no assets) ═══════════════ -->
+<style id="oilfield-styles">
+/* petroleum palette accents */
+:root{--oil-amber:#eab308;--oil-amber-soft:rgba(234,179,8,.14);--oil-steel:#38bdf8}
+/* pump jack scene in the sidebar */
+.oil-scene{width:100%;padding:2px 6px 10px;overflow:hidden}
+.oil-scene svg{display:block;width:100%;height:auto}
+.oj-beam{transform-origin:96px 38px;animation:oj-beam 2.6s ease-in-out infinite}
+@keyframes oj-beam{0%,100%{transform:rotate(3.4deg)}50%{transform:rotate(-3.4deg)}}
+.oj-crank{transform-origin:146px 58px;animation:oj-crank 2.6s linear infinite}
+@keyframes oj-crank{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.oj-rod{animation:oj-rod 2.6s ease-in-out infinite}
+@keyframes oj-rod{0%,100%{transform:translateY(2.2px)}50%{transform:translateY(-2.2px)}}
+.oj-drop{animation:oj-drop 2.6s ease-in infinite}
+.oj-drop.d2{animation-delay:1.3s}
+@keyframes oj-drop{0%,55%{opacity:0;transform:translateY(0)}62%{opacity:1}100%{opacity:0;transform:translateY(16px)}}
+.oj-glow{animation:oj-glow 2.6s ease-in-out infinite}
+@keyframes oj-glow{0%,100%{opacity:.35}50%{opacity:.75}}
+.oj-beacon{animation:oj-beacon 2s steps(1) infinite}
+@keyframes oj-beacon{0%,49%{opacity:1}50%,100%{opacity:.15}}
+/* flowline accent under the top nav */
+.flowline{height:2px;background:linear-gradient(90deg,transparent,var(--oil-amber) 30%,var(--oil-steel) 55%,transparent 85%);background-size:220% 100%;animation:flow 5s linear infinite;opacity:.75}
+@keyframes flow{from{background-position:120% 0}to{background-position:-120% 0}}
+/* horizon derricks behind the chat */
+#chat-horizon{position:absolute;left:0;right:0;bottom:0;height:190px;pointer-events:none;z-index:0;opacity:.7}
+#chat-viewport{position:relative}
+#chat-viewport>*{position:relative;z-index:1}
+</style>
+
+<script>
+(function(){
+  "use strict";
+  const PUMPJACK_SVG = `
+<svg viewBox="0 0 220 96" aria-hidden="true">
+  <defs>
+    <linearGradient id="oj-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1220"/><stop offset="1" stop-color="#101a2e"/>
+    </linearGradient>
+    <radialGradient id="oj-lamp" cx=".5" cy=".2" r=".8">
+      <stop offset="0" stop-color="rgba(234,179,8,.5)"/><stop offset="1" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="220" height="96" rx="10" fill="url(#oj-sky)"/>
+  <ellipse class="oj-glow" cx="96" cy="40" rx="52" ry="26" fill="url(#oj-lamp)"/>
+  <!-- ground -->
+  <rect x="10" y="78" width="200" height="3" rx="1.5" fill="#1c2942"/>
+  <rect x="24" y="76" width="120" height="4" rx="2" fill="#243550"/>
+  <!-- wellhead + valve -->
+  <rect x="52" y="62" width="8" height="16" rx="1.5" fill="#31435f"/>
+  <circle cx="56" cy="61" r="4.5" fill="#3d5375"/>
+  <!-- derrick tower (behind beam) -->
+  <path d="M42 78 L54 40 L58 40 L70 78" stroke="#2c3d59" stroke-width="3" fill="none" stroke-linejoin="round"/>
+  <path d="M46.5 64 H65 M48.5 54 H62.5" stroke="#2c3d59" stroke-width="1.6"/>
+  <!-- walking beam: pivots on the A-frame apex -->
+  <g class="oj-beam">
+    <rect x="36" y="35" width="120" height="6" rx="3" fill="#43597d"/>
+    <!-- horsehead -->
+    <path d="M36 38 C26 38 24 48 30 54 L38 54 Z" fill="#eab308"/>
+    <!-- pivot -->
+    <circle cx="96" cy="38" r="4" fill="#5b739c"/>
+  </g>
+  <!-- polished rod + downhole motion -->
+  <g class="oj-rod">
+    <rect x="94" y="44" width="4" height="34" fill="#374b70"/>
+  </g>
+  <!-- crank + counterweight -->
+  <g class="oj-crank">
+    <circle cx="146" cy="58" r="18" fill="none" stroke="#43597d" stroke-width="4"/>
+    <circle cx="146" cy="58" r="3" fill="#5b739c"/>
+    <rect x="160" y="50" width="10" height="16" rx="2" fill="#eab308"/>
+    <rect x="144" y="56" width="26" height="4" rx="2" fill="#43597d"/>
+  </g>
+  <!-- motor block -->
+  <rect x="168" y="66" width="26" height="12" rx="2.5" fill="#31435f"/>
+  <rect x="172" y="62" width="4" height="4" fill="#eab308" opacity=".7"/>
+  <!-- oil drops from the wellhead -->
+  <circle class="oj-drop" cx="56" cy="66" r="2.2" fill="#eab308"/>
+  <circle class="oj-drop d2" cx="56" cy="66" r="1.7" fill="#c98d0b"/>
+</svg>`;
+
+  const HORIZON_SVG = `
+<svg viewBox="0 0 1200 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <g fill="#0c1526">
+    <rect x="0" y="168" width="1200" height="22"/>
+    <path d="M0 170 L60 170 L70 96 L78 88 L86 96 L96 170 L150 170 L150 170 Z"/>
+    <path d="M240 170 L236 170 L268 60 L300 170 Z"/>
+    <path d="M262 96 L276 96 M256 120 L282 120 M250 144 L288 144" stroke="#0c1526" stroke-width="0"/>
+    <rect x="392" y="120" width="90" height="50" rx="3"/>
+    <rect x="402" y="96" width="14" height="26"/>
+    <rect x="432" y="104" width="26" height="16" rx="2"/>
+    <path d="M640 170 L686 170 L700 74 L710 64 L720 74 L734 170 Z"/>
+    <path d="M652 128 L722 128 M658 104 L716 104" stroke="#111d33" stroke-width="3"/>
+    <circle cx="710" cy="58" r="4"/>
+    <rect x="860" y="132" width="70" height="38" rx="3"/>
+    <path d="M866 132 L876 100 L884 100 L894 132 Z"/>
+    <rect x="980" y="146" width="120" height="24" rx="3"/>
+    <rect x="1002" y="118" width="10" height="30"/>
+  </g>
+  <g fill="#13203a">
+    <rect x="0" y="176" width="1200" height="14"/>
+  </g>
+  <!-- beacon lights -->
+  <g>
+    <circle class="oj-beacon" cx="710" cy="56" r="2.6" fill="#ef4444"/>
+    <circle class="oj-beacon" cx="76" cy="86" r="2.2" fill="#ef4444" style="animation-delay:1s"/>
+  </g>
+</svg>`;
+
+  function inject(){
+    // pump jack under the brand header
+    const brand = document.querySelector(".brand-header");
+    if (brand && !document.getElementById("oil-scene")) {
+      const d = document.createElement("div");
+      d.className = "oil-scene"; d.id = "oil-scene";
+      d.innerHTML = PUMPJACK_SVG;
+      brand.insertAdjacentElement("afterend", d);
+    }
+    // horizon silhouettes behind the chat
+    const main = document.getElementById("main-chat");
+    const vp = document.getElementById("chat-viewport");
+    if (main && vp && !document.getElementById("chat-horizon")) {
+      const h = document.createElement("div");
+      h.id = "chat-horizon";
+      h.innerHTML = HORIZON_SVG;
+      vp.appendChild(h);
+    }
+    // flowline accent under the top nav
+    const nav = document.querySelector(".top-nav");
+    if (nav && !document.querySelector(".top-nav .flowline")) {
+      const f = document.createElement("div");
+      f.className = "flowline";
+      nav.appendChild(f);
+    }
+  }
+  if (document.readyState !== "loading") inject();
+  document.addEventListener("DOMContentLoaded", inject);
+  setTimeout(inject, 400); // late-mounted layouts
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# SQLite WAL and database files
+*.db
+*.db-wal
+*.db-shm
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# user-uploaded datasets (never ship other people's field data)
+backend/uploads/
+
+# visitor-supplied LLM keys (secrets never enter git)
+backend/llm_settings.json
+
+# local runtime state (the current public link)
+.live_url

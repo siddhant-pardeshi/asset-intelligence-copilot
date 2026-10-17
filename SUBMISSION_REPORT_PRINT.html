@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Asset Intelligence Copilot — Submission Report</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 9pt;
+         color: #1a1a2e; background: #fff; }
+  a { color: #1565c0; text-decoration: none; }
+
+  /* ── Page breaks ── */
+  .page { width: 100%; padding: 14mm 16mm; }
+  .page1 { page-break-after: always; }
+  .page23 { page-break-before: always; }
+
+  /* ── Headers ── */
+  .page-header { display:flex; align-items:center; gap:12px;
+                  border-bottom: 2.5px solid #1565c0; padding-bottom: 8px; margin-bottom: 12px; }
+  .page-header .logo { font-size: 28pt; }
+  h1 { font-size: 16pt; color: #1565c0; margin-bottom: 2px; }
+  h2 { font-size: 12pt; color: #1565c0; margin: 10px 0 5px; }
+  h3 { font-size: 10pt; color: #0d47a1; margin: 8px 0 4px; }
+  h4 { font-size: 9pt; color: #333; margin: 6px 0 3px; }
+  .subtitle { font-size: 8pt; color: #555; margin-top: 2px; }
+  .page-header.tight { padding-bottom: 4px; margin-bottom: 6px; }
+  .page-header.tight h2 { margin: 0; font-size: 11pt; }
+  .page-header.tight .sub { font-size: 8pt; font-weight: normal; color: #666; }
+
+  /* ── Architecture box ── */
+  .arch-box { background: #0d1117; color: #c9d1d9; border-radius: 6px;
+               padding: 8px 10px; margin: 8px 0; }
+  .arch-box pre { font-family: 'Consolas','Courier New',monospace;
+                   font-size: 6.8pt; line-height: 1.35; white-space: pre-wrap; }
+
+  /* ── Two column ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+  ul { padding-left: 14px; }
+  li { margin-bottom: 4px; line-height: 1.35; }
+  p { margin: 4px 0; line-height: 1.4; }
+
+  /* ── Stack table ── */
+  .stack-table { width: 100%; border-collapse: collapse; font-size: 8pt; margin: 4px 0 8px; }
+  .stack-table th { background: #1565c0; color: #fff; padding: 3px 6px; text-align: left; }
+  .stack-table td { padding: 2px 6px; border-bottom: 1px solid #e0e0e0; }
+  .stack-table tr:nth-child(even) td { background: #f5f8ff; }
+
+  /* ── Q blocks ── */
+  .q-block { margin-bottom: 10px; border-left: 3px solid #1565c0;
+              padding-left: 8px; page-break-inside: avoid; }
+  .q-title { font-size: 10pt; font-weight: 700; color: #1565c0; margin-bottom: 3px; }
+  .qid { background: #1565c0; color: #fff; border-radius: 3px;
+          padding: 1px 5px; font-size: 8.5pt; margin-right: 4px; }
+  .summary { font-size: 8.5pt; line-height: 1.4; margin-bottom: 4px;
+              background: #f0f4ff; border-radius: 4px; padding: 5px 8px; }
+  .summary strong { color: #1565c0; }
+
+  /* ── Turns ── */
+  .turn { margin-top: 4px; }
+  .turn-header { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .turn-label { font-weight: 600; color: #333; font-size: 8pt; white-space: nowrap; }
+  .prompt-text { font-style: italic; color: #555; font-size: 8pt; line-height: 1.3; }
+
+  /* ── Visual tables ── */
+  .visual-label { font-size: 7.5pt; font-weight: 600; color: #0d47a1;
+                   margin: 4px 0 2px; }
+  .vtable { overflow-x: auto; margin: 2px 0 6px; }
+  .vtable table { width: 100%; border-collapse: collapse; font-size: 7.5pt; }
+  .vtable th { background: #1565c0; color: #fff; padding: 3px 5px;
+                text-align: left; font-weight: 600; white-space: nowrap; }
+  .vtable td { padding: 2px 5px; border-bottom: 1px solid #e8eaf0;
+                line-height: 1.25; }
+  .vtable tr:nth-child(even) td { background: #f5f8ff; }
+  .vtable .more { text-align: center; color: #888; font-style: italic; }
+
+  code { background: #f0f0f0; border-radius: 2px; padding: 0 3px; font-size: 8pt; }
+
+  /* ── Print ── */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 10mm 12mm; }
+    .arch-box { background: #0d1117 !important; color: #c9d1d9 !important; }
+    .vtable th { background: #1565c0 !important; color: #fff !important; }
+    .qid { background: #1565c0 !important; color: #fff !important; }
+    .stack-table th { background: #1565c0 !important; color: #fff !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page page1">
+  <div class="page-header">
+    <div class="logo">🛢️</div>
+    <div>
+      <h1>Asset Intelligence Copilot</h1>
+      <div class="subtitle">FlytBase Hackathon 2026 &nbsp;·&nbsp; Siddhant Pardeshi
+        &nbsp;·&nbsp; <a href="https://github.com/siddhant-pardeshi/asset-intelligence-copilot">github.com/siddhant-pardeshi/asset-intelligence-copilot</a></div>
+      <div class="subtitle">Dataset: 600 wells, 7 areas, 6 teams, 204,332 inspections, 28,745 maintenance records
+        &nbsp;·&nbsp; Operating date: <strong>15 January 2027</strong></div>
+    </div>
+  </div>
+
+  <h2>System Design &amp; Architecture</h2>
+
+  <div class="arch-box">
+<pre>
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                     ASSET INTELLIGENCE COPILOT ARCHITECTURE                     │
+├────────────────────────────────────────────────────────────────────────────────┤
+│  [ Web Dashboard / Chat UI ]  ──  REST /api/chat, /api/memory, /api/conversations
+│   • Reactive Zero-Build SPA  • Generative Visuals (Card|Table|Line|Bar|Map|Heatmap)
+│   • Persona Selector (Supervisors, HSE, Technicians)  • Evidence Drawer           │
+│                                   │                                               │
+│                                   ▼                                               │
+│  ┌──────────────────────────────────────────────────────────────────────────────┐ │
+│  │ 1. DETERMINISTIC NLU SEMANTIC INTENT ROUTER                                  │ │
+│  │    Regex &amp; Entity Matcher → Wells, Areas, Periods, Dates, Teams, SOPs         │ │
+│  │    100% deterministic on regulatory compliance &amp; engineering metrics           │ │
+│  ├──────────────────────────────────────────────────────────────────────────────┤ │
+│  │ 2. DUAL-SCOPE MEMORY ENGINE                                                   │ │
+│  │    Shared Knowledge: operator claims, pump swaps, field notes (all users)     │ │
+│  │    Private Memory:   session context, personal display prefs (per user)       │ │
+│  ├──────────────────────────────────────────────────────────────────────────────┤ │
+│  │ 3. SOP COMPLIANCE AUDITING ENGINE (OPS Rev 2)                                 │ │
+│  │    OPS-1 Gas Odor (12h/24h)  OPS-2 MOC Flowline Bypasses                     │ │
+│  │    OPS-3 Status Precedence   OPS-4 Root Cause Classification                  │ │
+│  │    OPS-5 Freeze Protection   OPS-6 Repeat Failure Tracking                    │ │
+│  │    Well thresholds: T100 8°C | T200 12°C | T300 15°C | T500 25°C             │ │
+│  └──────────────────────────────────────────────────────────────────────────────┘ │
+│                                   │                                               │
+│                                   ▼                                               │
+│  [ SQLite WAL Knowledge Base ] 600 wells · 204k inspections · 28k maintenance    │
+│   wells · inspections · maintenance · reports · context_notes · docs (SOPs/MOC)  │
+└────────────────────────────────────────────────────────────────────────────────┘
+</pre>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>🔧 Key Engineering Decisions</h3>
+      <ul>
+        <li><strong>Zero-Hallucination Pipeline:</strong> All safety-critical calculations
+          (OPS deadlines, spill volumes, downtime days, cost aggregations) run through
+          deterministic SQLite tools — never LLM text generation.</li>
+        <li><strong>OPS SOP Rev 2 Native:</strong> OPS-1 switches gas response
+          deadlines automatically (24h pre-2027 / 12h post-2027); OPS-2 validates
+          every bypass against MOC memo expiry; OPS-5 enforces 7-day heat trace SLAs
+          when ambient ≤ −5°C on producing wells.</li>
+        <li><strong>Dual-Scope Memory:</strong> Pump swap reports (Nathan on WELL-0333,
+          Olivia on WELL-0577) propagate to all users via shared memory; sort/format
+          preferences stay private to each operator's session.</li>
+        <li><strong>Generative UI Dispatch:</strong> NLU router selects the optimal
+          visual type per question domain — status card, table, SVG line chart, bar,
+          GIS map, or area×month heatmap.</li>
+        <li><strong>Honest Data Gaps:</strong> Q1 (reservoir pressure) correctly reports
+          zero pressure telemetry in the dataset rather than fabricating a map.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>🗂 Tech Stack</h3>
+      <table class="stack-table">
+        <tr><th>Layer</th><th>Technology</th></tr>
+        <tr><td>Backend API</td><td>Python 3.11 · FastAPI · Uvicorn</td></tr>
+        <tr><td>Database</td><td>SQLite WAL · natural-key upsert ingest</td></tr>
+        <tr><td>NLU Router</td><td>Deterministic regex + entity matching</td></tr>
+        <tr><td>Frontend</td><td>Zero-build SPA · HTML5 · CSS3 · JS</td></tr>
+        <tr><td>Charts</td><td>SVG (inline, no library)</td></tr>
+        <tr><td>Maps</td><td>Leaflet.js · OpenStreetMap tiles</td></tr>
+        <tr><td>Memory</td><td>SQLite-backed dual-scope store</td></tr>
+        <tr><td>SOP Engine</td><td>Python rules (domain.py · tools.py)</td></tr>
+        <tr><td>LLM (optional)</td><td>OpenAI-compatible via env var</td></tr>
+      </table>
+
+      <h3>📊 Dataset Scale</h3>
+      <table class="stack-table">
+        <tr><th>Entity</th><th>Count</th></tr>
+        <tr><td>Wells</td><td>600</td></tr>
+        <tr><td>Areas</td><td>7</td></tr>
+        <tr><td>Teams</td><td>6</td></tr>
+        <tr><td>Inspections</td><td>204,332</td></tr>
+        <tr><td>Maintenance records</td><td>28,745</td></tr>
+        <tr><td>Operating date</td><td>15 Jan 2027</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div class="page page23">
+  <div class="page-header tight">
+    <h2>Results — All 11 Final Questions &nbsp;<span class="sub">600 wells · Today: 15 Jan 2027</span></h2>
+  </div>
+  
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q1</span> Reservoir pressure</div>
+      <div class="summary">The dataset does not contain reservoir pressure readings. Inspection records include wellhead and ambient temperatures but <strong>no direct pressure measurements</strong>. A pressure map cannot be produced without downhole gauge data or well test surveys. This was correctly identified — no hallucination.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Michael Turner</span>
+            <span class="prompt-text">"All our wells feed one reservoir. Map the reservoir pressure across the field from the pressure data."</span></div>
+          
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q2</span> Best producer</div>
+      <div class="summary"><strong>WELL-0212</strong> had the most productive weeks in 2026: 53 continuous producing weeks with an average wellhead-to-air delta of <strong>36.6 °C</strong> (T500 well, Southeast Block 31). Note: volumetric production data is not in the dataset; uptime/thermal proxy was used.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Robert Hayes</span>
+            <span class="prompt-text">"Which well produced the most oil in 2026?"</span></div>
+          <div class="visual-label">📊 TABLE — Top Producers — 2026</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Type</th><th>Area</th><th>Productive Weeks</th><th>Avg Δ°C</th></tr></thead>
+<tbody>
+<tr><td>WELL-0212</td><td>T500</td><td>Southeast Block 31</td><td>53</td><td>36.6</td></tr>
+<tr><td>WELL-0242</td><td>T500</td><td>Southeast Block 31</td><td>53</td><td>36.6</td></tr>
+<tr><td>WELL-0228</td><td>T500</td><td>Southeast Block 31</td><td>53</td><td>36.5</td></tr>
+<tr><td>WELL-0287</td><td>T500</td><td>Southwest Block 23</td><td>53</td><td>36.5</td></tr>
+<tr><td>WELL-0550</td><td>T500</td><td>Southeast Block 32</td><td>53</td><td>36.5</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q3</span> Gas reports</div>
+      <div class="summary">26 operator notes mention gas/odour since 1 Nov 2026. <strong>17 met the OPS-1 deadline</strong>, <strong>9 missed it</strong>. Drone inspections were correctly rejected as field responses per SOP (drone carries thermal cameras, not gas detection equipment).</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Laura Simmons</span>
+            <span class="prompt-text">"Since 1 Nov 2026, every time an operator note reports gas at a well, did we get someone out to that well in time under our operating procedures? List every report and whether the response met the deadline."</span></div>
+          <div class="visual-label">📊 TABLE — Gas Odor Response Audit (OPS-1)</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Reported at</th><th>Response</th><th>Hours to response</th><th>Deadline</th><th>Met/Missed</th></tr></thead>
+<tbody>
+<tr><td>WELL-0163</td><td>Northeast Block 8</td><td>2026-11-03 20:55</td><td>MNT-0163-019 (2026-11-14 08:00)</td><td>251.1</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0149</td><td>Northeast Block 7</td><td>2026-11-06 18:20</td><td>MNT-0149-029 (2026-11-07 08:00)</td><td>13.7</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0165</td><td>Northeast Block 8</td><td>2026-11-13 20:35</td><td>MNT-0165-031 (2026-11-14 08:00)</td><td>11.4</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0341</td><td>Northwest Block 12</td><td>2026-11-19 07:40</td><td>INS-0341-0109 (2026-12-17 13:30)</td><td>677.8</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0091</td><td>Southwest Block 24</td><td>2026-11-27 22:25</td><td>MNT-0091-019 (2026-11-28 08:00)</td><td>9.6</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0423</td><td>Northwest Block 12</td><td>2026-12-03 05:25</td><td>INS-0423-0213 (2026-12-03 09:15)</td><td>3.8</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0059</td><td>Southwest Block 24</td><td>2026-12-03 06:10</td><td>INS-0059-0213 (2026-12-03 12:15)</td><td>6.1</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0332</td><td>Northwest Block 12</td><td>2026-12-03 12:10</td><td>None</td><td>—</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0401</td><td>Northwest Block 12</td><td>2026-12-05 13:50</td><td>MNT-0401-033 (2026-12-11 08:00)</td><td>138.2</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0189</td><td>Northeast Block 8</td><td>2026-12-10 12:35</td><td>MNT-0189-037 (2026-12-11 08:00)</td><td>19.4</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0403</td><td>Northwest Block 12</td><td>2026-12-10 21:15</td><td>MNT-0403-024 (2026-12-11 08:00)</td><td>10.8</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0244</td><td>Southeast Block 31</td><td>2026-12-11 05:25</td><td>MNT-0244-026 (2026-12-11 08:00)</td><td>2.6</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0040</td><td>Southwest Block 23</td><td>2026-12-12 01:55</td><td>MNT-0040-029 (2026-12-12 08:00)</td><td>6.1</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0228</td><td>Southeast Block 31</td><td>2026-12-16 19:50</td><td>INS-0228-0144 (2026-12-17 12:45)</td><td>16.9</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0052</td><td>Southwest Block 24</td><td>2026-12-18 06:45</td><td>None</td><td>—</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0370</td><td>Northwest Block 12</td><td>2026-12-21 12:45</td><td>MNT-0370-028 (2026-12-22 08:00)</td><td>19.2</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0362</td><td>Northwest Block 12</td><td>2026-12-24 00:15</td><td>MNT-0362-030 (2026-12-25 08:00)</td><td>31.8</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0161</td><td>Northeast Block 8</td><td>2026-12-25 15:45</td><td>INS-0161-0168 (2027-01-14 11:00)</td><td>475.2</td><td>24h</td><td>Missed</td></tr>
+<tr><td>WELL-0135</td><td>Northeast Block 7</td><td>2026-12-27 03:50</td><td>MNT-0135-034 (2026-12-27 08:00)</td><td>4.2</td><td>24h</td><td>Met</td></tr>
+<tr><td>WELL-0324</td><td>Northwest Block 12</td><td>2027-01-01 22:40</td><td>MNT-0324-036 (2027-01-02 08:00)</td><td>9.3</td><td>12h</td><td>Met</td></tr>
+<tr><td>WELL-0330</td><td>Northwest Block 12</td><td>2027-01-02 21:40</td><td>MNT-0330-030 (2027-01-03 08:00)</td><td>10.3</td><td>12h</td><td>Met</td></tr>
+<tr><td>WELL-0599</td><td>Southeast Block 32</td><td>2027-01-06 17:20</td><td>INS-0599-0196 (2027-01-07 09:45)</td><td>16.4</td><td>12h</td><td>Missed</td></tr>
+<tr><td>WELL-0516</td><td>Southeast Block 32</td><td>2027-01-06 21:15</td><td>INS-0516-0215 (2027-01-07 12:15)</td><td>15.0</td><td>12h</td><td>Missed</td></tr>
+<tr><td>WELL-0425</td><td>Northwest Block 12</td><td>2027-01-07 05:20</td><td>INS-0425-0218 (2027-01-07 09:00)</td><td>3.7</td><td>12h</td><td>Met</td></tr>
+<tr><td>WELL-0465</td><td>Southeast Block 32</td><td>2027-01-08 23:35</td><td>MNT-0465-031 (2027-01-09 08:00)</td><td>8.4</td><td>12h</td><td>Met</td></tr>
+<tr><td>WELL-0137</td><td>Northeast Block 7</td><td>2027-01-10 23:30</td><td>MNT-0137-032 (2027-01-11 08:00)</td><td>8.5</td><td>12h</td><td>Met</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q4</span> Temporary flowline bypasses</div>
+      <div class="summary">3 active bypasses found. <strong>WELL-0248</strong>: Allowed (MOC-2026-044, valid to 28 Feb 2027). <strong>WELL-0249</strong>: Expired (MOC-2026-036 expired 15 Dec 2026). <strong>WELL-0405</strong>: Not approved — no MOC memo on file. 5 total historical/current violations identified.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Chris Dalton</span>
+            <span class="prompt-text">"Across all areas, which temporary flowline bypasses are in place right now, and is each one allowed? Also list any bypass, past or present, that stayed in after its approval ran out or was never approved at all."</span></div>
+          <div class="visual-label">📊 TABLE — Temporary Flowline Bypasses Audit</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Bypass in</th><th>Bypass out</th><th>Approval</th><th>Approval valid until</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>WELL-0087</td><td>Southwest Block 24</td><td>2026-12-02</td><td>2027-01-06</td><td>MOC-2026-036</td><td>2026-12-15</td><td>Expired</td></tr>
+<tr><td>WELL-0158</td><td>Northeast Block 8</td><td>2026-11-20</td><td>2026-12-28</td><td>MOC-2026-036</td><td>2026-12-15</td><td>Expired</td></tr>
+<tr><td>WELL-0248</td><td>Southeast Block 31</td><td>2026-11-05</td><td>still in</td><td>MOC-2026-031 / MOC-2026-044</td><td>2027-02-28</td><td>Allowed</td></tr>
+<tr><td>WELL-0249</td><td>Southeast Block 31</td><td>2026-11-25</td><td>still in</td><td>MOC-2026-036</td><td>2026-12-15</td><td>Expired</td></tr>
+<tr><td>WELL-0405</td><td>Northwest Block 12</td><td>2026-12-20</td><td>still in</td><td>None</td><td>—</td><td>Not approved</td></tr>
+<tr><td>WELL-0561</td><td>Southeast Block 32</td><td>2026-12-08</td><td>2026-12-19</td><td>None</td><td>—</td><td>Not approved</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q5</span> The regulator's letter</div>
+      <div class="summary">6 reportable spills (≥ 5 bbl) in NE Blocks 7 & 8 since 1 Jun 2026. <strong>4 non-compliant</strong> (clean-up reports lack required phrase "Soil samples sent to the lab."). <strong>2 compliant</strong>: WELL-0277 and WELL-0119.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Michael Turner</span>
+            <span class="prompt-text">"The State Oil & Gas Commission wrote to us in November 2026 about spills. Which of our spills does the letter cover, and on which ones are we not compliant? Show me a table."</span></div>
+          <div class="visual-label">📊 TABLE — Regulator Letter Spill Compliance (Nov 2026)</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Inspection</th><th>Volume (bbl)</th><th>Clean-up job</th><th>Compliant?</th></tr></thead>
+<tbody>
+<tr><td>WELL-0168</td><td>Northeast Block 8</td><td>INS-0168-0190 (2026-06-11)</td><td>5.6</td><td>MNT-0168-024</td><td>No (No lab soil results in clean-up report)</td></tr>
+<tr><td>WELL-0123</td><td>Northeast Block 7</td><td>INS-0123-0093 (2026-09-24)</td><td>6.0</td><td>MNT-0123-014</td><td>No (No lab soil results in clean-up report)</td></tr>
+<tr><td>WELL-0277</td><td>Northeast Block 7</td><td>INS-0277-0205 (2026-10-01)</td><td>6.2</td><td>MNT-0277-031</td><td>Yes (Lab soil results submitted)</td></tr>
+<tr><td>WELL-0119</td><td>Northeast Block 7</td><td>INS-0119-0209 (2026-11-05)</td><td>6.0</td><td>MNT-0119-029</td><td>Yes (Lab soil results submitted)</td></tr>
+<tr><td>WELL-0182</td><td>Northeast Block 8</td><td>INS-0182-0208 (2026-12-03)</td><td>5.2</td><td>MNT-0182-028</td><td>No (No lab soil results in clean-up report)</td></tr>
+<tr><td>WELL-0262</td><td>Northeast Block 8</td><td>INS-0262-0218 (2027-01-07)</td><td>6.1</td><td>MNT-0262-029</td><td>No (No lab soil results in clean-up report)</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q6</span> Which status is right?</div>
+      <div class="summary"><strong>6 wells</strong> have conflicting status between latest inspection and operator notes. OPS-3 precedence applied: WELL-0032 & WELL-0033 → Producing oil (unconfirmed); WELL-0044, WELL-0323, WELL-0422, WELL-0481 → Not producing oil (shut in).</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Nathan Pierce</span>
+            <span class="prompt-text">"Across the whole field, not just my area, for which wells do the latest inspection and the operator notes disagree about whether the well is producing oil? For each one, what is its real status right now, and why?"</span></div>
+          <div class="visual-label">📊 TABLE — Field-wide Status Disagreements (OPS-3)</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Latest inspection</th><th>Latest operator note</th><th>Status now & Reason</th></tr></thead>
+<tbody>
+<tr><td>WELL-0032</td><td>Southwest Block 23</td><td>INS-0032-0219 (2027-01-14, not producing oil)</td><td>2027-01-15 10:25 — "Brought WELL-0032 back online after the pump change...."</td><td>Producing oil (unconfirmed) — Operator restart note is more recent than inspection, awaiting confirmation</td></tr>
+<tr><td>WELL-0033</td><td>Southwest Block 23</td><td>INS-0033-0222 (2027-01-14, not producing oil)</td><td>2027-01-15 10:25 — "Restarted WELL-0033, unit running smooth...."</td><td>Producing oil (unconfirmed) — Operator restart note is more recent than inspection, awaiting confirmation</td></tr>
+<tr><td>WELL-0044</td><td>Southwest Block 23</td><td>INS-0044-0218 (2027-01-14, producing oil)</td><td>2027-01-14 13:05 — "Shut in WELL-0044 at the wellhead, flowline leak suspec..."</td><td>Not producing oil (shut in) — Operator shut-in note is more recent than latest inspection</td></tr>
+<tr><td>WELL-0323</td><td>Northwest Block 12</td><td>INS-0323-0219 (2027-01-14, producing oil)</td><td>2027-01-14 19:20 — "Shut-in WELL-0323 after the pumper reported a stuffing ..."</td><td>Not producing oil (shut in) — Operator shut-in note is more recent than latest inspection</td></tr>
+<tr><td>WELL-0422</td><td>Northwest Block 12</td><td>INS-0422-0215 (2027-01-14, producing oil)</td><td>2027-01-14 21:35 — "Shut in WELL-0422 for the night, high pressure alarm on..."</td><td>Not producing oil (shut in) — Operator shut-in note is more recent than latest inspection</td></tr>
+<tr><td>WELL-0481</td><td>Southeast Block 32</td><td>INS-0481-0220 (2027-01-14, producing oil)</td><td>2027-01-14 18:50 — "Shut in WELL-0481 for the night, high pressure alarm on..."</td><td>Not producing oil (shut in) — Operator shut-in note is more recent than latest inspection</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q7</span> What the operators are hearing</div>
+      <div class="summary">105 wells have unaddressed warning notes. Top 3 for immediate dispatch: <strong>WELL-0413, WELL-0211, WELL-0175</strong> — all flagged "tagging bottom on downstroke" (catastrophic sucker rod parting / pump damage risk).</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 1 — Robert Hayes</span>
+            <span class="prompt-text">"Over the last month the operators have written notes about wells that sound or behave wrong. Which of those wells haven't had a repair since? Rank the 10 most likely to need a repair in the next 90 days, other than a spill clean-up, and quote the notes as evidence."</span></div>
+          <div class="visual-label">📊 TABLE — Top 10 Wells Needing Repair (Operator Warnings)</div><div class="vtable"><table>
+<thead><tr><th>Rank</th><th>Well</th><th>Area</th><th>Operator-note evidence</th><th>Other warning signs</th><th>Last repair</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>WELL-0413</td><td>Northwest Block 12</td><td>2026-12-22 — "WELL-0413 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0413-016 (2026-12-18, pump_jack)</td></tr>
+<tr><td>2</td><td>WELL-0211</td><td>Southeast Block 31</td><td>2026-12-23 — "WELL-0211 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0211-023 (2026-08-24, pump_jack)</td></tr>
+<tr><td>3</td><td>WELL-0175</td><td>Northeast Block 8</td><td>2026-12-26 — "WELL-0175 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0175-035 (2026-11-28, wellhead)</td></tr>
+<tr><td>4</td><td>WELL-0348</td><td>Northwest Block 12</td><td>2026-12-27 — "WELL-0348 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0348-038 (2026-12-19, downhole_pump)</td></tr>
+<tr><td>5</td><td>WELL-0236</td><td>Southeast Block 31</td><td>2026-12-30 — "WELL-0236 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0236-036 (2026-10-04, wellhead)</td></tr>
+<tr><td>6</td><td>WELL-0207</td><td>Southeast Block 31</td><td>2027-01-03 — "WELL-0207 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0207-024 (2026-11-29, pump_jack)</td></tr>
+<tr><td>7</td><td>WELL-0349</td><td>Northwest Block 12</td><td>2027-01-03 — "WELL-0349 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0349-033 (2026-11-22, wellhead)</td></tr>
+<tr><td>8</td><td>WELL-0376</td><td>Northwest Block 12</td><td>2027-01-04 — "WELL-0376 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0376-031 (2026-11-29, wellhead)</td></tr>
+<tr><td>9</td><td>WELL-0515</td><td>Southeast Block 32</td><td>2027-01-04 — "WELL-0515 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0515-024 (2026-12-28, wellhead)</td></tr>
+<tr><td>10</td><td>WELL-0152</td><td>Northeast Block 8</td><td>2027-01-06 — "WELL-0152 tagging bottom on the downstroke, adjust spacing next visit."</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>MNT-0152-030 (2026-12-20, wellhead)</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 2 — Robert Hayes</span>
+            <span class="prompt-text">"Which three would you send a crew to first this week, and why?"</span></div>
+          <div class="visual-label">📊 TABLE — Priority Crew Dispatch — Top 3 Wells</div><div class="vtable"><table>
+<thead><tr><th>Priority</th><th>Well</th><th>Area</th><th>Immediate Failure Risk</th><th>Recommended Action</th></tr></thead>
+<tbody>
+<tr><td>Priority 1</td><td>WELL-0413</td><td>Northwest Block 12</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>Adjust rod string spacing at wellhead</td></tr>
+<tr><td>Priority 2</td><td>WELL-0211</td><td>Southeast Block 31</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>Adjust rod string spacing at wellhead</td></tr>
+<tr><td>Priority 3</td><td>WELL-0175</td><td>Northeast Block 8</td><td>Tagging bottom on downstroke (severe rod/pump impact, imminent part)</td><td>Adjust rod string spacing at wellhead</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q8</span> Who told you that?</div>
+      <div class="summary">Multi-user, multi-session recall tracking. Nathan reports WELL-0333 swapped → excluded field-wide. Olivia reports WELL-0577 swapped → excluded. Robert Hayes sees 4 active recalled pumps. Nathan Pierce (private pref: sort by area/ID, costs in $k) sees 3 in Northwest Block 12.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 1 — Nathan Pierce</span>
+            <span class="prompt-text">"WELL-0333's recalled pump was swapped out yesterday. The work order isn't in the system yet. Please count it as replaced from now on."</span></div>
+          
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 2 — Nathan Pierce</span>
+            <span class="prompt-text">"Also, just for me: whenever you list wells, sort them by area and then by well ID, and show costs in thousands of dollars."</span></div>
+          
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 3 — Robert Hayes</span>
+            <span class="prompt-text">"Which recalled pumps are still in the ground right now?"</span></div>
+          <div class="visual-label">📊 TABLE — Recalled Pumps in Ground</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Install Job</th><th>Install Date</th><th>Recalled Lot</th><th>Cost to Install</th></tr></thead>
+<tbody>
+<tr><td>WELL-0305</td><td>Northwest Block 12</td><td>MNT-0305-032</td><td>2026-10-16</td><td>LOT-2409-A</td><td>$24,528</td></tr>
+<tr><td>WELL-0426</td><td>Northwest Block 12</td><td>MNT-0426-030</td><td>2026-06-19</td><td>LOT-2409-C</td><td>$24,044</td></tr>
+<tr><td>WELL-0428</td><td>Northwest Block 12</td><td>MNT-0428-022</td><td>2026-03-07</td><td>LOT-2410-B</td><td>$27,074</td></tr>
+<tr><td>WELL-0263</td><td>Southwest Block 23</td><td>MNT-0263-033</td><td>2026-10-16</td><td>LOT-2410-B</td><td>$17,254</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 4 — Olivia Grant</span>
+            <span class="prompt-text">"Nathan told me the recalled pump on WELL-0577 was swapped as well. Take it off the recall list."</span></div>
+          
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 5 — Nathan Pierce</span>
+            <span class="prompt-text">"Show me the recalled pumps that are still in the ground in my area, and what it cost to install each one."</span></div>
+          <div class="visual-label">📊 TABLE — Recalled Pumps in Ground</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Install Job</th><th>Install Date</th><th>Recalled Lot</th><th>Cost to Install</th></tr></thead>
+<tbody>
+<tr><td>WELL-0305</td><td>Northwest Block 12</td><td>MNT-0305-032</td><td>2026-10-16</td><td>LOT-2409-A</td><td>$24.5k</td></tr>
+<tr><td>WELL-0426</td><td>Northwest Block 12</td><td>MNT-0426-030</td><td>2026-06-19</td><td>LOT-2409-C</td><td>$24.0k</td></tr>
+<tr><td>WELL-0428</td><td>Northwest Block 12</td><td>MNT-0428-022</td><td>2026-03-07</td><td>LOT-2410-B</td><td>$27.1k</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q9</span> One conversation, several topics</div>
+      <div class="summary">6-topic single session: (1) 4 recalled pumps in ground; (2) Nathan Pierce leads NW Production, 150 wells; (3) OPS-5 cold weather rule, WELL-0310 missed December check; (4) WELL-0332 gas odor on 3 Dec — no H2S ppm recorded (drone had no gas sensor); (5) WELL-0263 only recalled pump shut in; (6) <strong>WELL-0332 is #1 priority</strong> — active uninvestigated gas hazard.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 1 — Robert Hayes</span>
+            <span class="prompt-text">"How many recalled pumps are still in the ground, and in which areas?"</span></div>
+          <div class="visual-label">📊 TABLE — Recalled Pumps in Ground</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Install Job</th><th>Install Date</th><th>Recalled Lot</th><th>Cost to Install</th></tr></thead>
+<tbody>
+<tr><td>WELL-0305</td><td>Northwest Block 12</td><td>MNT-0305-032</td><td>2026-10-16</td><td>LOT-2409-A</td><td>$24,528</td></tr>
+<tr><td>WELL-0426</td><td>Northwest Block 12</td><td>MNT-0426-030</td><td>2026-06-19</td><td>LOT-2409-C</td><td>$24,044</td></tr>
+<tr><td>WELL-0428</td><td>Northwest Block 12</td><td>MNT-0428-022</td><td>2026-03-07</td><td>LOT-2410-B</td><td>$27,074</td></tr>
+<tr><td>WELL-0263</td><td>Southwest Block 23</td><td>MNT-0263-033</td><td>2026-10-16</td><td>LOT-2410-B</td><td>$17,254</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 2 — Robert Hayes</span>
+            <span class="prompt-text">"Different topic. Who leads Northwest Production, and how many wells does that team run?"</span></div>
+          <div class="visual-label">📊 TABLE — Northwest Production Overview</div><div class="vtable"><table>
+<thead><tr><th>Team</th><th>Lead Supervisor</th><th>User ID</th><th>Well Count</th><th>Primary Area</th></tr></thead>
+<tbody>
+<tr><td>Northwest Production</td><td>Nathan Pierce</td><td>U-601</td><td>150</td><td>Northwest Block 12</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 3 — Robert Hayes</span>
+            <span class="prompt-text">"What does our operations SOP say about cold weather? Name one well that missed the check in December."</span></div>
+          <div class="visual-label">📊 TABLE — Wells Missing December OPS-5 Heat Trace Checks</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Inspection</th><th>Ambient Temp</th><th>Compliance Status</th></tr></thead>
+<tbody>
+<tr><td>WELL-0310</td><td>Northwest Block 12</td><td>INS-0310-0213 (2026-12-17)</td><td>-6.0 °C</td><td>No Heat trace check within 7 days</td></tr>
+<tr><td>WELL-0354</td><td>Northwest Block 12</td><td>INS-0354-0215 (2026-12-17)</td><td>-11.4 °C</td><td>No Heat trace check within 7 days</td></tr>
+<tr><td>WELL-0486</td><td>Southeast Block 32</td><td>INS-0486-0219 (2026-12-31)</td><td>-7.0 °C</td><td>No Heat trace check within 7 days</td></tr>
+<tr><td>WELL-0531</td><td>Southeast Block 32</td><td>INS-0531-0217 (2026-12-31)</td><td>-5.3 °C</td><td>No Heat trace check within 7 days</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 4 — Robert Hayes</span>
+            <span class="prompt-text">"An operator reported a gas smell at WELL-0332 on 3 Dec. What was the H2S reading?"</span></div>
+          
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 5 — Robert Hayes</span>
+            <span class="prompt-text">"Back to the pumps from my first question: which of those wells are not producing oil right now, and when was each one last repaired?"</span></div>
+          <div class="visual-label">📊 TABLE — Recalled Pump Wells — Current Operational Status</div><div class="vtable"><table>
+<thead><tr><th>Well</th><th>Area</th><th>Status Right Now</th><th>Last Repair</th></tr></thead>
+<tbody>
+<tr><td>WELL-0305</td><td>Northwest Block 12</td><td>Producing oil</td><td>MNT-0305-033 (2026-12-13, pump_jack: Scheduled lubrication and)</td></tr>
+<tr><td>WELL-0426</td><td>Northwest Block 12</td><td>Producing oil</td><td>MNT-0426-035 (2027-01-04, wellhead: Scheduled wellhead valve )</td></tr>
+<tr><td>WELL-0428</td><td>Northwest Block 12</td><td>Producing oil</td><td>MNT-0428-028 (2026-12-19, pump_jack: Scheduled lubrication and)</td></tr>
+<tr><td>WELL-0263</td><td>Southwest Block 23</td><td>Not producing oil</td><td>MNT-0263-035 (2027-01-09, flowline: Flowline corrosion pinhol)</td></tr>
+</tbody></table></div>
+        </div>
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Turn 6 — Robert Hayes</span>
+            <span class="prompt-text">"Of all the wells we've talked about today, which one would you deal with first, and why?"</span></div>
+          
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q10</span> What are we waiting on?</div>
+      <div class="summary">2026 extended shut-ins: <strong>Weather 66.7%</strong> (26 jobs, typical 21 extra days), <strong>Parts 33.3%</strong> (13 jobs, 21–35 extra days). Northwest Block 12 stands out for weather (100% of delays, 24.5 days avg). Southeast Block 32 for parts delays (35 extra days).</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Michael Turner</span>
+            <span class="prompt-text">"When a well stays shut in longer than the repair itself, what are we usually waiting on: parts, crews, contractors or weather? Break it down by area for jobs started in 2026, with the typical number of extra days, and tell me if any area stands out."</span></div>
+          <div class="visual-label">📊 TABLE — Downtime Delay Reasons by Area (2026)</div><div class="vtable"><table>
+<thead><tr><th>Area</th><th>Delay Reason</th><th>Share of Area Delays</th><th>Typical Extra Days</th></tr></thead>
+<tbody>
+<tr><td>Northeast Block 7</td><td>Weather (Rig delay)</td><td>4 jobs (100.0%)</td><td>21 days (avg 19.2d)</td></tr>
+<tr><td>Northeast Block 8</td><td>Parts (Vendor supply)</td><td>1 jobs (50.0%)</td><td>14 days (avg 14.0d)</td></tr>
+<tr><td>Northeast Block 8</td><td>Weather (Rig delay)</td><td>1 jobs (50.0%)</td><td>21 days (avg 21.0d)</td></tr>
+<tr><td>Northwest Block 12</td><td>Weather (Rig delay)</td><td>8 jobs (100.0%)</td><td>21 days (avg 24.5d)</td></tr>
+<tr><td>Southeast Block 31</td><td>Parts (Vendor supply)</td><td>2 jobs (28.6%)</td><td>14 days (avg 14.0d)</td></tr>
+<tr><td>Southeast Block 31</td><td>Weather (Rig delay)</td><td>5 jobs (71.4%)</td><td>21 days (avg 21.0d)</td></tr>
+<tr><td>Southeast Block 32</td><td>Parts (Vendor supply)</td><td>6 jobs (50.0%)</td><td>35 days (avg 28.0d)</td></tr>
+<tr><td>Southeast Block 32</td><td>Weather (Rig delay)</td><td>6 jobs (50.0%)</td><td>21 days (avg 21.0d)</td></tr>
+<tr><td>Southwest Block 23</td><td>Parts (Vendor supply)</td><td>2 jobs (50.0%)</td><td>21 days (avg 17.5d)</td></tr>
+<tr><td>Southwest Block 23</td><td>Weather (Rig delay)</td><td>2 jobs (50.0%)</td><td>35 days (avg 28.0d)</td></tr>
+<tr><td>Southwest Block 24</td><td>Parts (Vendor supply)</td><td>2 jobs (100.0%)</td><td>14 days (avg 14.0d)</td></tr>
+</tbody></table></div>
+        </div>
+    </div>
+    <div class="q-block">
+      <div class="q-title"><span class="qid">Q11</span> Hotter wells</div>
+      <div class="summary"><strong>Southeast Block 31</strong> consistently runs hottest: 31.4 °C thermal delta (wellhead 52.8 °C vs air 21.5 °C) across 9,433 inspection readings — highest of all 7 areas.</div>
+      
+        <div class="turn">
+          <div class="turn-header"><span class="turn-label">Olivia Grant</span>
+            <span class="prompt-text">"Which region of the field consistently runs hotter?"</span></div>
+          
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
