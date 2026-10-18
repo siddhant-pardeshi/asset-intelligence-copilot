@@ -9,7 +9,7 @@
 [![Final Questions](https://img.shields.io/badge/Final%20Questions-11%2F11%20Verified%20%26%20Recorded-6366f1?style=for-the-badge)](FINAL_RESULTS.md)
 [![Demo Video](https://img.shields.io/badge/Demo%20Video-4.07%20Min%20%7C%201080p%20HD-ef4444?style=for-the-badge&logo=youtube)](Asset_Intelligence_Copilot_Demo.mp4)
 [![Final Report](https://img.shields.io/badge/Submission%20Report-8--Page%20PDF-f59e0b?style=for-the-badge&logo=adobeacrobatreader)](Asset_Intelligence_Copilot_Final_Report.pdf)
-[![Hackathon Certificate](https://img.shields.io/badge/FlytBase%20Hack%20Day-Certificate%20Awarded-8b5cf6?style=for-the-badge&logo=codementor)](docs/img/hackathon-certificate.png)
+[![Hackathon Certificate](https://img.shields.io/badge/FlytBase%20Hack%20Day-Certificate%20Awarded-8b5cf6?style=for-the-badge&logo=codementor)](docs/img/flytbase-hacktoberfest-hackday-certificate.png)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI%20%7C%20SQLite%20WAL-0284c7?style=for-the-badge&logo=fastapi)](backend/)
 [![Zero Hallucination](https://img.shields.io/badge/Compliance-100%25%20Deterministic-059669?style=for-the-badge)](backend/app/tools.py)
@@ -20,7 +20,7 @@
 
 | Asset | Link | Format | Description |
 |---|---|---|---|
-| 🎖️ **Certificate** | **[hackathon-certificate.png](docs/img/hackathon-certificate.png)** | PNG / [PDF](docs/Hackathon_Certificate.pdf) | **AI Hackers Collective x Hacktoberfest Hack Day Certificate of Participation** awarded to Siddhant Pardeshi by FlytBase & MLH. |
+| 🎖️ **Certificate** | **[flytbase-hacktoberfest-hackday-certificate.png](docs/img/flytbase-hacktoberfest-hackday-certificate.png)** | PNG / [PDF](docs/FlytBase_Hacktoberfest_HackDay_Certificate.pdf) | **AI Hackers Collective x Hacktoberfest Hack Day Certificate of Participation** awarded to Siddhant Pardeshi by FlytBase & MLH (17th Oct, 2026). |
 | 🎥 **Demo Video** | **[Asset_Intelligence_Copilot_Demo.mp4](Asset_Intelligence_Copilot_Demo.mp4)** | 1080p MP4 (7.4 MB) | **4:07 min presentation:** Architecture & design (0:00–1:43) + live end-to-end scenario walkthroughs (1:43–4:07). |
 | 📄 **Final Report** | **[Asset_Intelligence_Copilot_Final_Report.pdf](Asset_Intelligence_Copilot_Final_Report.pdf)** | PDF (530 KB) | **Comprehensive report:** Page 1 system architecture & tools + Pages 2–8 complete outputs for all 11 final questions. |
 | 📊 **Full Results** | **[FINAL_RESULTS.md](FINAL_RESULTS.md)** | Markdown | Complete turn-by-turn answers, user personas, prompt texts, and visual data tables for all 17 evaluated turns. |
@@ -33,8 +33,8 @@
 ## 🎖️ Hackathon Certificate of Participation
 
 <p align="center">
-  <a href="docs/img/hackathon-certificate.png">
-    <img src="docs/img/hackathon-certificate.png" alt="AI Hackers Collective x Hacktoberfest Hack Day Certificate - Siddhant Pardeshi" width="92%" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);"/>
+  <a href="docs/img/flytbase-hacktoberfest-hackday-certificate.png">
+    <img src="docs/img/flytbase-hacktoberfest-hackday-certificate.png" alt="AI Hackers Collective x Hacktoberfest Hack Day Certificate - Siddhant Pardeshi" width="92%" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);"/>
   </a>
 </p>
 
@@ -245,9 +245,9 @@ asset-intelligence-copilot/
 ├── LICENSE                                 # MIT License
 ├── README.md                               # Comprehensive repository documentation
 ├── docs/
-│   ├── Hackathon_Certificate.pdf           # FlytBase Hack Day Participation Certificate (PDF)
+│   ├── FlytBase_Hacktoberfest_HackDay_Certificate.pdf # Official FlytBase Hack Day Participation Certificate (PDF)
 │   └── img/
-│       └── hackathon-certificate.png       # Award certificate image (AI Hackers Collective x FlytBase)
+│       └── flytbase-hacktoberfest-hackday-certificate.png # Certificate image (AI Hackers Collective x Hacktoberfest Hack Day)
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                         # FastAPI application entrypoint & static mounts
